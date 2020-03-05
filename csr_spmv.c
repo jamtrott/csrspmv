@@ -125,7 +125,7 @@ int csr_matrix_spmv(
     const double * x,
     double * y)
 {
-#pragma omp parallel for
+#pragma omp for
     for (int i = 0; i < num_rows; i++) {
         double z = 0.0;
         for (int k = row_ptr[i]; k < row_ptr[i+1]; k++)
@@ -217,17 +217,24 @@ int main(int argc, char * argv[])
     for (int i = 0; i < num_rows; i++)
         y[i] = 0.;
 
-    struct timespec t0, t1;
-    clock_gettime(CLOCK_MONOTONIC, &t0);
+#pragma omp parallel
+    {
+        struct timespec t0, t1;
+#pragma omp master
+        clock_gettime(CLOCK_MONOTONIC, &t0);
 
-    /* Compute the sparse matrix-vector multiplication. */
-    csr_matrix_spmv(
-        num_rows, num_columns, num_nonzeros,
-        row_ptr, column_indices, values, x, y);
+        /* Compute the sparse matrix-vector multiplication. */
+        csr_matrix_spmv(
+            num_rows, num_columns, num_nonzeros,
+            row_ptr, column_indices, values, x, y);
 
-    clock_gettime(CLOCK_MONOTONIC, &t1);
-    fprintf(stdout, "Time: %.3f\n",
-            timespec_duration(t0, t1));
+#pragma omp master
+        {
+            clock_gettime(CLOCK_MONOTONIC, &t1);
+            fprintf(stdout, "Time: %.3f\n",
+                    timespec_duration(t0, t1));
+        }
+    }
 
 #if 0
     /* Write the results to standard output. */
