@@ -86,6 +86,7 @@ int csr_matrix_from_matrix_market(
      * Sort the non-zeros within each row by their column indices.
      * Here, a simple insertion sort algorithm is used.
      */
+#pragma omp parallel for
     for (int i = 0; i < num_rows; i++) {
         int num_nonzeros = row_ptr[i+1] - row_ptr[i];
         for (int k = 0; k < num_nonzeros; k++) {
