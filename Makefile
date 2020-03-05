@@ -18,9 +18,15 @@ clean: $(clean-programs)
 
 INCLUDES = -iquote src
 CFLAGS += -g -Wall
+LDFLAGS += -lm
 
 ifndef NO_OPENMP
 CFLAGS += -fopenmp
+endif
+
+ifndef NO_LIBPFM
+CFLAGS += -DHAVE_LIBPFM
+LDFLAGS += -lpfm
 endif
 
 
@@ -28,10 +34,16 @@ endif
 # multiplication with a matrix in CSR format.
 csr_spmv = csr_spmv
 csr_spmv_c_sources = \
+	csr_spmv.c \
 	mmio.c \
-	csr_spmv.c
+	perf_events.c \
+	perf_session.c \
+	sample_statistics.c
 csr_spmv_c_headers = \
-	mmio.h
+	mmio.h \
+	perf_events.h \
+	perf_session.h \
+	sample_statistics.h
 csr_spmv_c_objects := $(foreach x,$(csr_spmv_c_sources),$(x:.c=.o))
 $(csr_spmv_c_objects): %.o: %.c $(csr_spmv_c_headers)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@

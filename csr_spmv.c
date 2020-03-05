@@ -4,6 +4,8 @@
  */
 
 #include "mmio.h"
+#include "perf_events.h"
+#include "perf_session.h"
 
 #include <errno.h>
 
@@ -123,7 +125,7 @@ int csr_matrix_spmv(
     const double * x,
     double * y)
 {
-#pragma omp parallel for
+#pragma omp for
     for (int i = 0; i < num_rows; i++) {
         double z = 0.0;
         for (int k = row_ptr[i]; k < row_ptr[i+1]; k++)
@@ -133,13 +135,11 @@ int csr_matrix_spmv(
     return 0;
 }
 
-int main(int argc, char * argv[])
+int benchmark_csr_matrix_spmv(
+    const char * matrix_market_path,
+    struct perf_session * perf_session)
 {
     int err;
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s FILE\n", argv[0]);
-        return EXIT_FAILURE;
-    }
 
     /* Read a matrix from a file in the matrix market format. */
     int num_rows;
@@ -149,10 +149,10 @@ int main(int argc, char * argv[])
     int * unsorted_column_indices;
     double * unsorted_values;
     err = mm_read_unsymmetric_sparse(
-        argv[1], &num_rows, &num_columns, &num_nonzeros,
+        matrix_market_path, &num_rows, &num_columns, &num_nonzeros,
         &unsorted_values, &unsorted_row_indices, &unsorted_column_indices);
     if (err)
-        return EXIT_FAILURE;
+        return err;
 
     /* Convert to a compressed sparse row format. */
     int * row_ptr;
@@ -166,7 +166,7 @@ int main(int argc, char * argv[])
         free(unsorted_values);
         free(unsorted_column_indices);
         free(unsorted_row_indices);
-        return EXIT_FAILURE;
+        return err;
     }
 
     free(unsorted_values);
@@ -181,7 +181,7 @@ int main(int argc, char * argv[])
         free(values);
         free(row_ptr);
         free(column_indices);
-        return EXIT_FAILURE;
+        return errno;
     }
 
 #pragma omp parallel for
@@ -197,17 +197,32 @@ int main(int argc, char * argv[])
         free(values);
         free(row_ptr);
         free(column_indices);
-        return EXIT_FAILURE;
+        return errno;
     }
 
 #pragma omp parallel for
     for (int i = 0; i < num_rows; i++)
         y[i] = 0.;
 
-    /* Compute the sparse matrix-vector multiplication. */
-    csr_matrix_spmv(
-        num_rows, num_columns, num_nonzeros,
-        row_ptr, column_indices, values, x, y);
+    #pragma omp parallel
+    {
+        #pragma omp master
+        perf_session_enable(perf_session);
+
+        /* Compute the sparse matrix-vector multiplication. */
+        csr_matrix_spmv(
+            num_rows, num_columns, num_nonzeros,
+            row_ptr, column_indices, values, x, y);
+
+        #pragma omp master
+        perf_session_disable(perf_session);
+    }
+
+    bool verbose = false;
+    perf_session_print_headings(perf_session, stdout, verbose);
+    fprintf(stdout, "\n");
+    perf_session_print(perf_session, stdout, verbose);
+    fprintf(stdout, "\n");
 
 #if 0
     /* Write the results to standard output. */
@@ -220,5 +235,93 @@ int main(int argc, char * argv[])
     free(values);
     free(column_indices);
     free(row_ptr);
+    return 0;
+}
+
+int main(int argc, char * argv[])
+{
+    int err;
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s FILE\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    /* Initialise libpfm, which is used to access hardware performance
+     * monitoring facilities. */
+    err = libpfm_init();
+    if (err)
+        return EXIT_FAILURE;
+
+    /* Create a performance monitoring session, which will be used to
+     * count hardware performance events. */
+    struct perf_session perf_session;
+    const char * event_names_l1[] = {
+        "L1-DCACHE-LOADS",
+        "L1-DCACHE-STORES",
+        "L1D.REPLACEMENT"};
+    const char * event_names_l2_and_tlb[] = {
+        "L2_LINES_IN.ANY",
+        "DTLB_LOAD_MISSES.STLB_HIT",
+        "DTLB_LOAD_MISSES.WALK_COMPLETED"};
+    const char * event_names_imc0[] = {
+        "skx_unc_imc0::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc0::UNC_M_CAS_COUNT.WR"};
+    const char * event_names_imc1[] = {
+        "skx_unc_imc1::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc1::UNC_M_CAS_COUNT.WR"};
+    const char * event_names_imc2[] = {
+        "skx_unc_imc2::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc2::UNC_M_CAS_COUNT.WR"};
+    const char * event_names_imc3[] = {
+        "skx_unc_imc3::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc3::UNC_M_CAS_COUNT.WR"};
+    const char * event_names_imc4[] = {
+        "skx_unc_imc4::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc4::UNC_M_CAS_COUNT.WR"};
+    const char * event_names_imc5[] = {
+        "skx_unc_imc5::UNC_M_CAS_COUNT.RD",
+        "skx_unc_imc5::UNC_M_CAS_COUNT.WR"};
+
+    int num_perf_event_groups = 8;
+    int num_events_per_group[] = {
+        3, 3, 2, 2, 2, 2, 2, 2};
+    const char ** event_names_per_group[] = {
+        event_names_l1,
+        event_names_l2_and_tlb,
+        event_names_imc0,
+        event_names_imc1,
+        event_names_imc2,
+        event_names_imc3,
+        event_names_imc4,
+        event_names_imc5};
+    pid_t pid_per_group[] = {0,0,-1,-1,-1,-1,-1,-1};
+    int cpu_per_group[] = {-1,-1,0,0,0,0,0,0};
+    int flags_per_group[] = {0,0,0,0,0,0,0,0};
+    int max_num_runs = 100;
+    err = perf_session_init(
+        &perf_session,
+        num_perf_event_groups,
+        num_events_per_group,
+        event_names_per_group,
+        pid_per_group,
+        cpu_per_group,
+        flags_per_group,
+        max_num_runs);
+    if (err) {
+        libpfm_free();
+        return EXIT_FAILURE;
+    }
+
+    /* Benchmark the CSR matrix SpMV kernel. */
+    err = benchmark_csr_matrix_spmv(
+        argv[1], &perf_session);
+    if (err) {
+        perf_session_free(&perf_session);
+        libpfm_free();
+        return EXIT_FAILURE;
+    }
+
+    perf_session_free(&perf_session);
+    libpfm_free();
     return EXIT_SUCCESS;
 }
