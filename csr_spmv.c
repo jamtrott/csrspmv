@@ -143,12 +143,15 @@ static double timespec_duration(
     struct timespec t0,
     struct timespec t1)
 {
-    return (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) * 1e-9;
+    return (t1.tv_sec - t0.tv_sec) +
+        (t1.tv_nsec - t0.tv_nsec) * 1e-9;
 }
 
 int main(int argc, char * argv[])
 {
     int err;
+    const int num_runs = 100;
+
     if (argc < 2) {
         fprintf(stderr, "Usage: %s FILE\n", argv[0]);
         return EXIT_FAILURE;
@@ -223,16 +226,18 @@ int main(int argc, char * argv[])
 #pragma omp master
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
-        /* Compute the sparse matrix-vector multiplication. */
-        csr_matrix_spmv(
-            num_rows, num_columns, num_nonzeros,
-            row_ptr, column_indices, values, x, y);
+        for (int i = 0; i < num_runs; i++) {
+            /* Compute the sparse matrix-vector multiplication. */
+            csr_matrix_spmv(
+                num_rows, num_columns, num_nonzeros,
+                row_ptr, column_indices, values, x, y);
+        }
 
 #pragma omp master
         {
             clock_gettime(CLOCK_MONOTONIC, &t1);
             fprintf(stdout, "Time: %.3f\n",
-                    timespec_duration(t0, t1));
+                    timespec_duration(t0, t1) / num_runs);
         }
     }
 
