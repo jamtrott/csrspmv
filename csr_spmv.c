@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /**
  * `csr_matrix_from_matrix_market()` converts a matrix in the
@@ -133,6 +134,17 @@ int csr_matrix_spmv(
     return 0;
 }
 
+/**
+ * `timespec_duration()` is the duration, in seconds, elapsed between
+ * two given time points.
+ */
+static double timespec_duration(
+    struct timespec t0,
+    struct timespec t1)
+{
+    return (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) * 1e-9;
+}
+
 int main(int argc, char * argv[])
 {
     int err;
@@ -204,10 +216,17 @@ int main(int argc, char * argv[])
     for (int i = 0; i < num_rows; i++)
         y[i] = 0.;
 
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
     /* Compute the sparse matrix-vector multiplication. */
     csr_matrix_spmv(
         num_rows, num_columns, num_nonzeros,
         row_ptr, column_indices, values, x, y);
+
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    fprintf(stdout, "Time: %.3f\n",
+            timespec_duration(t0, t1));
 
 #if 0
     /* Write the results to standard output. */
