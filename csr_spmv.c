@@ -110,7 +110,7 @@ int csr_matrix_from_matrix_market(
 }
 
 /**
- * `csr_matrix_spmv()` computes the multiplication of a sparse vector
+ * `csr_matrix_spmv()` computes the multiplication of a sparse matrix
  * in the compressed sparse row (CSR) format with a dense vector,
  * referred to as the source vector, to produce another dense vector,
  * called the destination vector.
