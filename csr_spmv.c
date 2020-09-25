@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2020 James D. Trotter
+ * Authors: James D. Trotter <james@simula.no>
+ *
  * Sparse matrix-vector multiplication for matrices in the compressed
  * sparse row (CSR) storage format.
  */
