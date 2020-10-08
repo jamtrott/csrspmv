@@ -1,20 +1,30 @@
-##
-## Example program for sparse matrix-vector multiplication with the
-## compressed sparse row (CSR) format.
-##
-programs = csr_spmv
+# Benchmark program for CSR SpMV
+# Copyright (C) 2020 James D. Trotter
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# Authors: James D. Trotter <james@simula.no>
+#
+# Benchmarking program for sparse matrix-vector multiplication (SpMV)
+# with matrices in compressed sparse row (CSR) format.
 
-clean-programs = $(programs:%=%-clean)
+csrspmv = csrspmv
 
-all: $(libs) $(programs)
-
-clean: $(clean-programs)
-
+all: csrspmv
+clean:
+	rm -f $(csrspmv_c_objects) csrspmv
 .PHONY: all clean
-
-##
-## Configuration
-##
 
 INCLUDES = -iquote src
 CFLAGS += -g -Wall
@@ -23,19 +33,21 @@ ifndef NO_OPENMP
 CFLAGS += -fopenmp
 endif
 
-
-# An example program for computing a sparse matrix-vector
-# multiplication with a matrix in CSR format.
-csr_spmv = csr_spmv
-csr_spmv_c_sources = \
-	mmio.c \
-	csr_spmv.c
-csr_spmv_c_headers = \
-	mmio.h
-csr_spmv_c_objects := $(foreach x,$(csr_spmv_c_sources),$(x:.c=.o))
-$(csr_spmv_c_objects): %.o: %.c $(csr_spmv_c_headers)
+csrspmv_c_sources = \
+	csr.c \
+	main.c \
+	matrix_market.c \
+	parse.c \
+	program_options.c \
+	vector.c
+csrspmv_c_headers = \
+	csr.h \
+	matrix_market.h \
+	parse.h \
+	program_options.h \
+	vector.h
+csrspmv_c_objects := $(foreach x,$(csrspmv_c_sources),$(x:.c=.o))
+$(csrspmv_c_objects): %.o: %.c $(csrspmv_c_headers)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
-$(csr_spmv): $(csr_spmv_c_objects)
+csrspmv: $(csrspmv_c_objects)
 	$(CC) $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
-csr_spmv-clean:
-	rm -f $(csr_spmv_c_objects) $(csr_spmv)
