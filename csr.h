@@ -165,6 +165,7 @@ int csr_matrix_int32_from_matrix_market(
 int csr_matrix_int32_spmv(
     const struct csr_matrix_int32 * matrix,
     const struct vector * x,
-    struct vector * y);
+    struct vector * y,
+    int64_t * num_flops);
 
 #endif

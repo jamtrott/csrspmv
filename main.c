@@ -232,7 +232,11 @@ int main(int argc, char *argv[])
 
     if (args.verbose > 0) {
         clock_gettime(CLOCK_MONOTONIC, &t1);
-        fprintf(stdout, "%.6f seconds\n", timespec_duration(t0, t1));
+        fprintf(stdout, "%.6f seconds %d rows %d columns %"PRId64" nonzeros\n",
+                timespec_duration(t0, t1),
+                csr_matrix.num_rows,
+                csr_matrix.num_columns,
+                csr_matrix.num_nonzeros);
     }
 
     /* 3. Load or generate a source vector. */
@@ -364,9 +368,10 @@ int main(int argc, char *argv[])
     }
 
     /* 5. Compute the sparse matrix-vector multiplication. */
+    int64_t num_flops = 0;
 #pragma omp parallel reduction(err_add:err)
     for (int i = 0; i < args.repeat; i++) {
-        err = csr_matrix_int32_spmv(&csr_matrix, &x, &y);
+        err = csr_matrix_int32_spmv(&csr_matrix, &x, &y, &num_flops);
         if (err)
             break;
     }
@@ -382,8 +387,8 @@ int main(int argc, char *argv[])
 
     if (args.verbose > 0) {
         clock_gettime(CLOCK_MONOTONIC, &t1);
-        fprintf(stdout, "%.6f seconds %d multiplications\n",
-                timespec_duration(t0, t1), args.repeat);
+        fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops\n",
+                timespec_duration(t0, t1), args.repeat, num_flops);
         fflush(stdout);
     }
 

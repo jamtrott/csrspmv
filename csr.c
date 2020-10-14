@@ -729,21 +729,35 @@ static int csr_matrix_int32_spmv_binary_f64_f64(
 static int csr_matrix_int32_spmv_binary(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_binary)
         return EINVAL;
     if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_binary_f32_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_binary_f32_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_binary_f32_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_binary_f32_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_binary_f64_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_binary_f64_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_binary_f64_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_binary_f64_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else {
         return EINVAL;
     }
+#pragma omp master
+    if (num_flops)
+        *num_flops += matrix->num_nonzeros;
+    return 0;
 }
 
 /**
@@ -869,21 +883,35 @@ static int csr_matrix_int32_spmv_int32_f64_f64(
 static int csr_matrix_int32_spmv_int32(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_int32)
         return EINVAL;
     if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_int32_f32_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int32_f32_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_int32_f32_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int32_f32_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_int32_f64_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int32_f64_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_int32_f64_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int32_f64_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else {
         return EINVAL;
     }
+#pragma omp master
+    if (num_flops)
+        *num_flops += 2*matrix->num_nonzeros;
+    return 0;
 }
 
 /**
@@ -1009,21 +1037,35 @@ static int csr_matrix_int32_spmv_int64_f64_f64(
 static int csr_matrix_int32_spmv_int64(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_int64)
         return EINVAL;
     if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_int64_f32_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int64_f32_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_int64_f32_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int64_f32_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_int64_f64_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int64_f64_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_int64_f64_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_int64_f64_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else {
         return EINVAL;
     }
+#pragma omp master
+    if (num_flops)
+        *num_flops += 2*matrix->num_nonzeros;
+    return 0;
 }
 
 /**
@@ -1149,21 +1191,35 @@ static int csr_matrix_int32_spmv_f32_f64_f64(
 static int csr_matrix_int32_spmv_f32(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_f32)
         return EINVAL;
     if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_f32_f32_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f32_f32_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_f32_f32_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f32_f32_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_f32_f64_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f32_f64_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_f32_f64_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f32_f64_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else {
         return EINVAL;
     }
+#pragma omp master
+    if (num_flops)
+        *num_flops += 2*matrix->num_nonzeros;
+    return 0;
 }
 
 /**
@@ -1289,21 +1345,35 @@ static int csr_matrix_int32_spmv_f64_f64_f64(
 static int csr_matrix_int32_spmv_f64(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_f64)
         return EINVAL;
     if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_f64_f32_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f64_f32_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_f64_f32_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f64_f32_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f32) {
-        return csr_matrix_int32_spmv_f64_f64_f32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f64_f64_f32(matrix, src, dst);
+        if (err)
+            return err;
     } else if (src->value_format == vector_value_f64 && dst->value_format == vector_value_f64) {
-        return csr_matrix_int32_spmv_f64_f64_f64(matrix, src, dst);
+        err = csr_matrix_int32_spmv_f64_f64_f64(matrix, src, dst);
+        if (err)
+            return err;
     } else {
         return EINVAL;
     }
+#pragma omp master
+    if (num_flops)
+        *num_flops += 2*matrix->num_nonzeros;
+    return 0;
 }
 
 /**
@@ -1415,8 +1485,10 @@ static int csr_matrix_int32_spmv_complex32_complex32_complex32(
 static int csr_matrix_int32_spmv_complex32(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
+    int err;
     if (matrix->value_format != csr_value_complex32)
         return EINVAL;
     if (dst->value_format != vector_value_complex32)
@@ -1424,11 +1496,26 @@ static int csr_matrix_int32_spmv_complex32(
 
     switch (src->value_format) {
     case vector_value_f32:
-        return csr_matrix_int32_spmv_complex32_f32_complex32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_complex32_f32_complex32(matrix, src, dst);
+        if (err)
+            return err;
+#pragma omp master
+        if (num_flops)
+            *num_flops += 4*matrix->num_nonzeros;
     case vector_value_f64:
-        return csr_matrix_int32_spmv_complex32_f64_complex32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_complex32_f64_complex32(matrix, src, dst);
+        if (err)
+            return err;
+#pragma omp master
+        if (num_flops)
+            *num_flops += 4*matrix->num_nonzeros;
     case vector_value_complex32:
-        return csr_matrix_int32_spmv_complex32_complex32_complex32(matrix, src, dst);
+        err = csr_matrix_int32_spmv_complex32_complex32_complex32(matrix, src, dst);
+        if (err)
+            return err;
+#pragma omp master
+        if (num_flops)
+            *num_flops += 8*matrix->num_nonzeros;
     default:
         return EINVAL;
     }
@@ -1440,7 +1527,8 @@ static int csr_matrix_int32_spmv_complex32(
 int csr_matrix_int32_spmv(
     const struct csr_matrix_int32 * matrix,
     const struct vector * src,
-    struct vector * dst)
+    struct vector * dst,
+    int64_t * num_flops)
 {
     if (matrix->num_rows != dst->num_values)
         return EINVAL;
@@ -1449,17 +1537,17 @@ int csr_matrix_int32_spmv(
 
     switch (matrix->value_format) {
     case csr_value_binary:
-        return csr_matrix_int32_spmv_binary(matrix, src, dst);
+        return csr_matrix_int32_spmv_binary(matrix, src, dst, num_flops);
     case csr_value_int32:
-        return csr_matrix_int32_spmv_int32(matrix, src, dst);
+        return csr_matrix_int32_spmv_int32(matrix, src, dst, num_flops);
     case csr_value_int64:
-        return csr_matrix_int32_spmv_int64(matrix, src, dst);
+        return csr_matrix_int32_spmv_int64(matrix, src, dst, num_flops);
     case csr_value_f32:
-        return csr_matrix_int32_spmv_f32(matrix, src, dst);
+        return csr_matrix_int32_spmv_f32(matrix, src, dst, num_flops);
     case csr_value_f64:
-        return csr_matrix_int32_spmv_f64(matrix, src, dst);
+        return csr_matrix_int32_spmv_f64(matrix, src, dst, num_flops);
     case csr_value_complex32:
-        return csr_matrix_int32_spmv_complex32(matrix, src, dst);
+        return csr_matrix_int32_spmv_complex32(matrix, src, dst, num_flops);
     default:
         return EINVAL;
     }
