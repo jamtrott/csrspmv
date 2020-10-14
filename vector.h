@@ -34,6 +34,7 @@ struct matrix_market;
  */
 enum vector_value_format
 {
+    vector_value_int32,
     vector_value_f32,
     vector_value_f64,
     vector_value_complex32,

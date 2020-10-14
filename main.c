@@ -290,6 +290,10 @@ int main(int argc, char *argv[])
             format = vector_value_f64;
         } else if (csr_matrix.value_format == csr_value_complex32) {
             format = vector_value_complex32;
+        } else if (csr_matrix.value_format == csr_value_int32) {
+            format = vector_value_int32;
+        } else if (csr_matrix.value_format == csr_value_binary) {
+            format = vector_value_int32;
         } else {
             fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                     strerror(ENOTSUP));
@@ -330,6 +334,10 @@ int main(int argc, char *argv[])
             format = vector_value_f64;
         } else if (csr_matrix.value_format == csr_value_complex32) {
             format = vector_value_complex32;
+        } else if (csr_matrix.value_format == csr_value_int32) {
+            format = vector_value_int32;
+        } else if (csr_matrix.value_format == csr_value_binary) {
+            format = vector_value_int32;
         } else {
             fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                     strerror(ENOTSUP));

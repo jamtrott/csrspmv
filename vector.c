@@ -25,6 +25,7 @@
 
 #include <errno.h>
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,6 +39,8 @@ const char * vector_value_format_str(
     enum vector_value_format value_format)
 {
     switch (value_format) {
+    case vector_value_int32:
+        return "int32";
     case vector_value_f32:
         return "f32";
     case vector_value_f64:
@@ -61,7 +64,9 @@ int parse_vector_value_format(
     const char * s,
     enum vector_value_format * format)
 {
-    if (strcmp("f32", s) == 0) {
+    if (strcmp("int32", s) == 0) {
+        *format = vector_value_int32;
+    } else if (strcmp("f32", s) == 0) {
         *format = vector_value_f32;
     } else if (strcmp("f64", s) == 0) {
         *format = vector_value_f64;
@@ -82,6 +87,9 @@ static int vector_size(
     size_t * size)
 {
     switch (value_format) {
+    case vector_value_int32:
+        *size = num_values * sizeof(int32_t);
+        return 0;
     case vector_value_f32:
         *size = num_values * sizeof(float);
         return 0;
@@ -127,6 +135,12 @@ int vector_zero(
     struct vector * vector)
 {
     switch (vector->value_format) {
+    case vector_value_int32:
+#pragma omp parallel for
+        for (int32_t i = 0; i < vector->num_values; i++)
+            ((int32_t *) vector->values)[i] = 0;
+        break;
+
     case vector_value_f32:
 #pragma omp parallel for
         for (int32_t i = 0; i < vector->num_values; i++)
@@ -158,6 +172,12 @@ int vector_ones(
     struct vector * vector)
 {
     switch (vector->value_format) {
+    case vector_value_int32:
+#pragma omp parallel for
+        for (int32_t i = 0; i < vector->num_values; i++)
+            ((int32_t *) vector->values)[i] = 1;
+        break;
+
     case vector_value_f32:
 #pragma omp parallel for
         for (int32_t i = 0; i < vector->num_values; i++)
@@ -221,6 +241,15 @@ int vector_print(
 {
     int i;
     switch (vector->value_format) {
+    case vector_value_int32:
+        {
+            const int32_t * x = (const int32_t *) vector->values;
+            for (i = 0; i < vector->num_values-1; i++)
+                fprintf(f, "%*"PRId32"%s", field_width, x[i], delimiter);
+            fprintf(f, "%*"PRId32, field_width, x[i]);
+        }
+        break;
+
     case vector_value_f32:
         {
             const float * x = (const float *) vector->values;
@@ -332,6 +361,24 @@ int vector_from_matrix_market(
         }
         break;
 
+    case matrix_market_integer:
+        {
+            /* 1. Allocate storage for vector values. */
+            int32_t num_values = matrix_market->num_rows;
+            enum vector_value_format value_format = vector_value_int32;
+            err = vector_alloc(vector, num_values, value_format);
+            if (err)
+                return err;
+
+            /* 2. Copy vector values from matrix market data. */
+            int32_t * dst = (int32_t *) vector->values;
+            const int32_t * src = (const int32_t *) matrix_market->data;
+#pragma omp parallel for
+            for (int i = 0; i < num_values; i++)
+                dst[i] = src[i];
+        }
+        break;
+
     default:
         return ENOTSUP;
     }
@@ -427,6 +474,27 @@ int vector_to_matrix_market(
                 dst[2*i+0] = src[2*i+0];
                 dst[2*i+1] = src[2*i+1];
             }
+        }
+        break;
+
+    case vector_value_int32:
+        {
+            /* 1. Allocate storage for vector values. */
+            matrix_market->field = matrix_market_integer;
+            matrix_market->data = malloc(vector->num_values * sizeof(int32_t));
+            if (!matrix_market->data) {
+                for (int i = 0; i < num_comment_lines; i++)
+                    free(matrix_market->comment_lines[i]);
+                free(matrix_market->comment_lines);
+                return errno;
+            }
+
+            /* 2. Copy vector values from matrix market data. */
+            const int32_t * src = (const int32_t *) vector->values;
+            int32_t * dst = (int32_t *) matrix_market->data;
+#pragma omp parallel for
+            for (int i = 0; i < vector->num_values; i++)
+                dst[i] = src[i];
         }
         break;
 

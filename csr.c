@@ -616,6 +616,90 @@ int csr_matrix_int32_from_matrix_market(
 }
 
 /**
+ * `csr_matrix_int32_spmv_binary_int32_int32()` multiplies a CSR matrix
+ * of binary values with a 32-bit integer source vector, resulting in
+ * a 32-bit floating point destination vector.
+ */
+static int csr_matrix_int32_spmv_binary_int32_int32(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_binary ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_int32)
+        return EINVAL;
+    const int64_t * p = matrix->row_ptr;
+    const int32_t * j = matrix->column_indices;
+    const int32_t * x = (const int32_t *) src->values;
+    int32_t * y = (int32_t *) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        float z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += x[j[k]];
+        y[i] += z;
+    }
+    return 0;
+}
+
+/**
+ * `csr_matrix_int32_spmv_binary_int32_f32()` multiplies a CSR matrix
+ * of binary values with a 32-bit integer source vector, resulting in
+ * a 32-bit floating point destination vector.
+ */
+static int csr_matrix_int32_spmv_binary_int32_f32(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_binary ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_f32)
+        return EINVAL;
+    const int64_t * p = matrix->row_ptr;
+    const int32_t * j = matrix->column_indices;
+    const int32_t * x = (const int32_t *) src->values;
+    float * y = (float *) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        float z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += x[j[k]];
+        y[i] += z;
+    }
+    return 0;
+}
+
+/**
+ * `csr_matrix_int32_spmv_binary_int32_f64()` multiplies a CSR matrix
+ * of binary values with a 32-bit integer source vector, resulting in
+ * a 64-bit floating point destination vector.
+ */
+static int csr_matrix_int32_spmv_binary_int32_f64(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_binary ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_f64)
+        return EINVAL;
+    const int64_t * p = matrix->row_ptr;
+    const int32_t * j = matrix->column_indices;
+    const int32_t * x = (const int32_t *) src->values;
+    double * y = (double *) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        double z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += x[j[k]];
+        y[i] += z;
+    }
+    return 0;
+}
+
+/**
  * `csr_matrix_int32_spmv_binary_f32_f32()` multiplies a CSR matrix of
  * binary values with a 32-bit floating point source vector, resulting
  * in a 32-bit floating point destination vector.
@@ -740,7 +824,19 @@ static int csr_matrix_int32_spmv_binary(
     int err;
     if (matrix->value_format != csr_value_binary)
         return EINVAL;
-    if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
+    if (src->value_format == vector_value_int32 && dst->value_format == vector_value_int32) {
+        err = csr_matrix_int32_spmv_binary_int32_int32(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_int32 && dst->value_format == vector_value_f32) {
+        err = csr_matrix_int32_spmv_binary_int32_f32(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_int32 && dst->value_format == vector_value_f64) {
+        err = csr_matrix_int32_spmv_binary_int32_f64(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
         err = csr_matrix_int32_spmv_binary_f32_f32(matrix, src, dst);
         if (err)
             return err;
@@ -762,6 +858,93 @@ static int csr_matrix_int32_spmv_binary(
 #pragma omp master
     if (num_flops)
         *num_flops += matrix->num_nonzeros;
+    return 0;
+}
+
+/**
+ * `csr_matrix_int32_spmv_int32_int32_int32()` multiplies a CSR matrix
+ * of 32-bit integer values with a 32-bit integer source vector,
+ * resulting in a 32-bit integer destination vector.
+ */
+static int csr_matrix_int32_spmv_int32_int32_int32(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_int32 ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_int32)
+        return EINVAL;
+    const int64_t * restrict p = matrix->row_ptr;
+    const int32_t * restrict j = matrix->column_indices;
+    const int32_t * restrict a = (const int32_t * restrict) matrix->values;
+    const int32_t * restrict x = (const int32_t * restrict) src->values;
+    int32_t * restrict y = (int32_t * restrict) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        int32_t z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += a[k] * x[j[k]];
+        y[i] += z;
+    }
+    return 0;
+}
+
+/**
+ * `csr_matrix_int32_spmv_int32_int32_f32()` multiplies a CSR matrix
+ * of 32-bit integer values with a 32-bit integer source vector,
+ * resulting in a 32-bit integer destination vector.
+ */
+static int csr_matrix_int32_spmv_int32_int32_f32(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_int32 ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_int32)
+        return EINVAL;
+    const int64_t * restrict p = matrix->row_ptr;
+    const int32_t * restrict j = matrix->column_indices;
+    const int32_t * restrict a = (const int32_t * restrict) matrix->values;
+    const int32_t * restrict x = (const int32_t * restrict) src->values;
+    float * restrict y = (float * restrict) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        float z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += a[k] * x[j[k]];
+        y[i] += z;
+    }
+    return 0;
+}
+
+/**
+ * `csr_matrix_int32_spmv_int32_int32_f64()` multiplies a CSR matrix
+ * of 32-bit integer values with a 32-bit integer source vector,
+ * resulting in a 32-bit floating point destination vector.
+ */
+static int csr_matrix_int32_spmv_int32_int32_f64(
+    const struct csr_matrix_int32 * matrix,
+    const struct vector * src,
+    struct vector * dst)
+{
+    if (matrix->value_format != csr_value_int32 ||
+        src->value_format != vector_value_int32 ||
+        dst->value_format != vector_value_int32)
+        return EINVAL;
+    const int64_t * restrict p = matrix->row_ptr;
+    const int32_t * restrict j = matrix->column_indices;
+    const int32_t * restrict a = (const int32_t * restrict) matrix->values;
+    const int32_t * restrict x = (const int32_t * restrict) src->values;
+    double * restrict y = (double * restrict) dst->values;
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        double z = 0.0;
+        for (int64_t k = p[i]; k < p[i+1]; k++)
+            z += a[k] * x[j[k]];
+        y[i] += z;
+    }
     return 0;
 }
 
@@ -894,7 +1077,20 @@ static int csr_matrix_int32_spmv_int32(
     int err;
     if (matrix->value_format != csr_value_int32)
         return EINVAL;
-    if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
+
+    if (src->value_format == vector_value_int32 && dst->value_format == vector_value_int32) {
+        err = csr_matrix_int32_spmv_int32_int32_int32(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_int32 && dst->value_format == vector_value_f32) {
+        err = csr_matrix_int32_spmv_int32_int32_f32(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_int32 && dst->value_format == vector_value_f64) {
+        err = csr_matrix_int32_spmv_int32_int32_f64(matrix, src, dst);
+        if (err)
+            return err;
+    } else if (src->value_format == vector_value_f32 && dst->value_format == vector_value_f32) {
         err = csr_matrix_int32_spmv_int32_f32_f32(matrix, src, dst);
         if (err)
             return err;
