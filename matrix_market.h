@@ -23,6 +23,7 @@
 #ifndef MATRIX_MARKET_H
 #define MATRIX_MARKET_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -293,16 +294,57 @@ int matrix_market_write(
     int precision);
 
 /**
- * `matrix_market_nonzero_per_row()` counts the number of nonzeros in
+ * `matrix_market_num_nonzeros()` is the total number of nonzeros a
+ * matrix in the matrix market format, including strictly upper
+ * triangular parts of symmetric, skew-symmetric or Hermitian
+ * matrices.
+ */
+int matrix_market_num_nonzeros(
+    const struct matrix_market * matrix,
+    int64_t * nonzeros);
+
+/**
+ * `matrix_market_num_nonzeros_diagonal()` is the number of nonzeros
+ * on the main diagonal of a matrix in the matrix market format.
+ */
+int matrix_market_num_nonzeros_diagonal(
+    const struct matrix_market * matrix,
+    int64_t * nonzeros);
+
+/**
+ * `matrix_market_nonzeros_per_row()` counts the number of nonzeros in
  * each row of a matrix in the matrix market format.
+ *
+ * If `include_strict_upper_triangular_part` is `true` and `symmetry`
+ * is `symmetric`, `skew-symmetric` or `hermitian`, then nonzeros in
+ * the strict upper triangular part are also counted. Conversely, if
+ * `include_strict_upper_triangular_part` is `false`, then only
+ * nonzeros in the lower triangular part of the matrix are counted.
+ *
+ * `matrix_market_nonzeros_per_row()` returns `EINVAL` if `symmetry`
+ * is `general` and `include_strict_upper_triangular_part` is `false`.
  */
 int matrix_market_nonzeros_per_row(
     const struct matrix_market * matrix,
+    bool include_strict_upper_triangular_part,
     int64_t * nonzeros_per_row);
+
+/**
+ * `matrix_market_nonzeros_per_column_exclude_diagonal()` counts the
+ * number of nonzeros in each column of a matrix in the matrix market
+ * format, excluding nonzeros that lie on the main diagonal.
+ */
+int matrix_market_nonzeros_per_column_exclude_diagonal(
+    const struct matrix_market * matrix,
+    int64_t * nonzeros_per_column);
 
 /**
  * `matrix_market_sort_nonzeros()` sorts the nonzeros according to
  * their rows and columns for a matrix in the matrix market format.
+ *
+ * If `symmetry` is `symmetric`, `skew-symmetric` or `hermitian`, then
+ * nonzero values of the lower and strict upper triangular parts of
+ * the matrix are included.
  */
 int matrix_market_sort_nonzeros(
     const struct matrix_market * matrix,

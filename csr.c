@@ -407,13 +407,17 @@ int csr_matrix_int32_from_matrix_market(
         return EINVAL;
     if (matrix_market->format != matrix_market_coordinate)
         return EINVAL;
-    if (matrix_market->symmetry != matrix_market_general)
-        return ENOTSUP;
+
+    /* Determine the number of matrix nonzeros. */
+    int64_t num_nonzeros;
+    err = matrix_market_num_nonzeros(
+        matrix_market, &num_nonzeros);
+    if (err)
+        return err;
 
     /* 1. Allocate storage for matrix. */
     int32_t num_rows = matrix_market->num_rows;
     int32_t num_columns = matrix_market->num_columns;
-    int64_t num_nonzeros = matrix_market->num_nonzeros;
     err = csr_matrix_int32_alloc(
         matrix, num_rows, num_columns, num_nonzeros, value_format);
     if (err)
@@ -436,6 +440,7 @@ int csr_matrix_int32_from_matrix_market(
         return err;
     }
 
+    /* Check if we need to convert matrix values to a different data type. */
     bool convert_values = true;
     if ((matrix_market->field == matrix_market_real && value_format == csr_value_f32) ||
         (matrix_market->field == matrix_market_double && value_format == csr_value_f64) ||
