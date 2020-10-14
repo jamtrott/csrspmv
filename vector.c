@@ -31,6 +31,25 @@
 #include <string.h>
 
 /**
+ * `vector_value_format_str()` is a string representing a given vector
+ * value format.
+ */
+const char * vector_value_format_str(
+    enum vector_value_format value_format)
+{
+    switch (value_format) {
+    case vector_value_f32:
+        return "f32";
+    case vector_value_f64:
+        return "f64";
+    case vector_value_complex32:
+        return "complex32";
+    default:
+        return "unknown";
+    }
+}
+
+/**
  * `parse_vector_value_format()` parses a string designating a format
  * for vectors.
  *

@@ -40,6 +40,13 @@ enum vector_value_format
 };
 
 /**
+ * `vector_value_format_str()` is a string representing a given vector
+ * value format.
+ */
+const char * vector_value_format_str(
+    enum vector_value_format value_format);
+
+/**
  * `parse_vector_value_format()` parses a string designating a format
  * for vectors.
  *

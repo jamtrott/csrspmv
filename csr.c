@@ -1507,6 +1507,7 @@ static int csr_matrix_int32_spmv_complex32(
 #pragma omp master
         if (num_flops)
             *num_flops += 4*matrix->num_nonzeros;
+        break;
     case vector_value_f64:
         err = csr_matrix_int32_spmv_complex32_f64_complex32(matrix, src, dst);
         if (err)
@@ -1514,6 +1515,7 @@ static int csr_matrix_int32_spmv_complex32(
 #pragma omp master
         if (num_flops)
             *num_flops += 4*matrix->num_nonzeros;
+        break;
     case vector_value_complex32:
         err = csr_matrix_int32_spmv_complex32_complex32_complex32(matrix, src, dst);
         if (err)
@@ -1521,9 +1523,11 @@ static int csr_matrix_int32_spmv_complex32(
 #pragma omp master
         if (num_flops)
             *num_flops += 8*matrix->num_nonzeros;
+        break;
     default:
         return EINVAL;
     }
+    return 0;
 }
 
 /**
