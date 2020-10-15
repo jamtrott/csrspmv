@@ -1324,18 +1324,19 @@ int matrix_market_num_nonzeros(
     const struct matrix_market * matrix,
     int64_t * nonzeros)
 {
+    int err;
     if (matrix->symmetry == matrix_market_general) {
         *nonzeros = matrix->num_nonzeros;
-    } else if (matrix->symmetry == matrix_market_symmetric) {
-        int64_t diagonal_nonzeros;
-        matrix_market_num_nonzeros_diagonal(matrix, &diagonal_nonzeros);
-        *nonzeros = 2*matrix->num_nonzeros - diagonal_nonzeros;
     } else if (matrix->symmetry == matrix_market_skew_symmetric) {
         *nonzeros = 2*matrix->num_nonzeros;
-    } else if (matrix->symmetry == matrix_market_hermitian) {
-        int64_t diagonal_nonzeros;
-        matrix_market_num_nonzeros_diagonal(matrix, &diagonal_nonzeros);
-        *nonzeros = matrix->num_nonzeros - diagonal_nonzeros;
+    } else if (matrix->symmetry == matrix_market_symmetric ||
+               matrix->symmetry == matrix_market_hermitian)
+    {
+        int64_t num_diagonal_nonzeros;
+        err = matrix_market_num_nonzeros_diagonal(matrix, &num_diagonal_nonzeros);
+        if (err)
+            return err;
+        *nonzeros = 2*matrix->num_nonzeros - num_diagonal_nonzeros;
     } else {
         return EINVAL;
     }
@@ -1355,13 +1356,13 @@ int matrix_market_num_nonzeros_diagonal(
             ? matrix->num_columns : matrix->num_rows;
 
     } else if (matrix->format == matrix_market_coordinate) {
-        *nonzeros = 0;
         switch (matrix->field) {
         case matrix_market_real:
             {
                 const struct matrix_market_coordinate_real * data =
                     (const struct matrix_market_coordinate_real *)
                     matrix->data;
+                *nonzeros = 0;
                 for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
                     if (data[k].i == data[k].j)
                         (*nonzeros)++;
@@ -1373,6 +1374,7 @@ int matrix_market_num_nonzeros_diagonal(
                 const struct matrix_market_coordinate_double * data =
                     (const struct matrix_market_coordinate_double *)
                     matrix->data;
+                *nonzeros = 0;
                 for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
                     if (data[k].i == data[k].j)
                         (*nonzeros)++;
@@ -1384,6 +1386,7 @@ int matrix_market_num_nonzeros_diagonal(
                 const struct matrix_market_coordinate_complex * data =
                     (const struct matrix_market_coordinate_complex *)
                     matrix->data;
+                *nonzeros = 0;
                 for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
                     if (data[k].i == data[k].j)
                         (*nonzeros)++;
@@ -1395,6 +1398,7 @@ int matrix_market_num_nonzeros_diagonal(
                 const struct matrix_market_coordinate_integer * data =
                     (const struct matrix_market_coordinate_integer *)
                     matrix->data;
+                *nonzeros = 0;
                 for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
                     if (data[k].i == data[k].j)
                         (*nonzeros)++;
@@ -1406,6 +1410,7 @@ int matrix_market_num_nonzeros_diagonal(
                 const struct matrix_market_coordinate_pattern * data =
                     (const struct matrix_market_coordinate_pattern *)
                     matrix->data;
+                *nonzeros = 0;
                 for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
                     if (data[k].i == data[k].j)
                         (*nonzeros)++;
@@ -1523,10 +1528,10 @@ int matrix_market_nonzeros_per_row(
     return 0;
 }
 
-
 /**
  * `matrix_market_sort_nonzeros_real()` sorts the nonzeros according
- * to their rows and columns for a matrix in the matrix market format.
+ * to their rows and columns for a matrix in the matrix market format
+ * whose `field` is `real`.
  */
 static int matrix_market_sort_nonzeros_real(
     const struct matrix_market * matrix,
@@ -1585,7 +1590,320 @@ static int matrix_market_sort_nonzeros_real(
                 l--;
             }
             j[l+1] = data[k].i-1;
+            if (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_hermitian)
+            {
+                a[l+1] = data[k].a;
+            } else if (matrix->symmetry == matrix_market_skew_symmetric) {
+                a[l+1] = -data[k].a;
+            }
+            row_ptr[i+1]++;
+        }
+
+    } else {
+        return EINVAL;
+    }
+    return 0;
+}
+
+/**
+ * `matrix_market_sort_nonzeros_double()` sorts the nonzeros according
+ * to their rows and columns for a matrix in the matrix market format
+ * whose `field` is `double`.
+ */
+static int matrix_market_sort_nonzeros_double(
+    const struct matrix_market * matrix,
+    const struct matrix_market_coordinate_double * data,
+    bool include_strict_upper_triangular_part,
+    int64_t * row_ptr,
+    int32_t * j,
+    double * a)
+{
+    if (matrix->field != matrix_market_double)
+        return EINVAL;
+
+    if ((include_strict_upper_triangular_part &&
+         matrix->symmetry == matrix_market_general) ||
+        (!include_strict_upper_triangular_part &&
+         (matrix->symmetry == matrix_market_symmetric ||
+          matrix->symmetry == matrix_market_skew_symmetric ||
+          matrix->symmetry == matrix_market_hermitian)))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
             a[l+1] = data[k].a;
+            row_ptr[i+1]++;
+        }
+
+    } else if (include_strict_upper_triangular_part &&
+               (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_skew_symmetric ||
+                matrix->symmetry == matrix_market_hermitian))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            a[l+1] = data[k].a;
+            row_ptr[i+1]++;
+            if (data[k].i == data[k].j)
+                continue;
+            i = data[k].j-1;
+            l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].i-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].i-1;
+            if (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_hermitian)
+            {
+                a[l+1] = data[k].a;
+            } else if (matrix->symmetry == matrix_market_skew_symmetric) {
+                a[l+1] = -data[k].a;
+            }
+            row_ptr[i+1]++;
+        }
+
+    } else {
+        return EINVAL;
+    }
+    return 0;
+}
+
+/**
+ * `matrix_market_sort_nonzeros_complex()` sorts the nonzeros according
+ * to their rows and columns for a matrix in the matrix market format
+ * whose `field` is `complex`.
+ */
+static int matrix_market_sort_nonzeros_complex(
+    const struct matrix_market * matrix,
+    const struct matrix_market_coordinate_complex * data,
+    bool include_strict_upper_triangular_part,
+    int64_t * row_ptr,
+    int32_t * j,
+    float * a)
+{
+    if (matrix->field != matrix_market_complex)
+        return EINVAL;
+
+    if ((include_strict_upper_triangular_part &&
+         matrix->symmetry == matrix_market_general) ||
+        (!include_strict_upper_triangular_part &&
+         (matrix->symmetry == matrix_market_symmetric ||
+          matrix->symmetry == matrix_market_skew_symmetric ||
+          matrix->symmetry == matrix_market_hermitian)))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[2*(l+1)+0] = a[2*l+0];
+                a[2*(l+1)+1] = a[2*l+1];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            a[2*(l+1)+0] = data[k].ar;
+            a[2*(l+1)+1] = data[k].ai;
+            row_ptr[i+1]++;
+        }
+
+    } else if (include_strict_upper_triangular_part &&
+               (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_skew_symmetric ||
+                matrix->symmetry == matrix_market_hermitian))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[2*(l+1)+0] = a[2*l+0];
+                a[2*(l+1)+1] = a[2*l+1];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            a[2*(l+1)+0] = data[k].ar;
+            a[2*(l+1)+1] = data[k].ai;
+            row_ptr[i+1]++;
+            if (data[k].i == data[k].j)
+                continue;
+            i = data[k].j-1;
+            l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].i-1) {
+                j[l+1] = j[l];
+                a[2*(l+1)+0] = a[2*l+0];
+                a[2*(l+1)+1] = a[2*l+1];
+                l--;
+            }
+            j[l+1] = data[k].i-1;
+            if (matrix->symmetry == matrix_market_symmetric) {
+                a[2*(l+1)+0] = data[k].ar;
+                a[2*(l+1)+1] = data[k].ai;
+            } else if (matrix->symmetry == matrix_market_skew_symmetric) {
+                a[2*(l+1)+0] = -data[k].ar;
+                a[2*(l+1)+1] = -data[k].ai;
+            } else if (matrix->symmetry == matrix_market_hermitian) {
+                a[2*(l+1)+0] = data[k].ar;
+                a[2*(l+1)+1] = -data[k].ai;
+            }
+            row_ptr[i+1]++;
+        }
+
+    } else {
+        return EINVAL;
+    }
+    return 0;
+}
+
+/**
+ * `matrix_market_sort_nonzeros_integer()` sorts the nonzeros according
+ * to their rows and columns for a matrix in the matrix market format
+ * whose `field` is `integer`.
+ */
+static int matrix_market_sort_nonzeros_integer(
+    const struct matrix_market * matrix,
+    const struct matrix_market_coordinate_integer * data,
+    bool include_strict_upper_triangular_part,
+    int64_t * row_ptr,
+    int32_t * j,
+    int * a)
+{
+    if (matrix->field != matrix_market_integer)
+        return EINVAL;
+
+    if ((include_strict_upper_triangular_part &&
+         matrix->symmetry == matrix_market_general) ||
+        (!include_strict_upper_triangular_part &&
+         (matrix->symmetry == matrix_market_symmetric ||
+          matrix->symmetry == matrix_market_skew_symmetric ||
+          matrix->symmetry == matrix_market_hermitian)))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            a[l+1] = data[k].a;
+            row_ptr[i+1]++;
+        }
+
+    } else if (include_strict_upper_triangular_part &&
+               (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_skew_symmetric ||
+                matrix->symmetry == matrix_market_hermitian))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            a[l+1] = data[k].a;
+            row_ptr[i+1]++;
+            if (data[k].i == data[k].j)
+                continue;
+            i = data[k].j-1;
+            l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].i-1) {
+                j[l+1] = j[l];
+                a[l+1] = a[l];
+                l--;
+            }
+            j[l+1] = data[k].i-1;
+            if (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_hermitian)
+            {
+                a[l+1] = data[k].a;
+            } else if (matrix->symmetry == matrix_market_skew_symmetric) {
+                a[l+1] = -data[k].a;
+            }
+            row_ptr[i+1]++;
+        }
+
+    } else {
+        return EINVAL;
+    }
+    return 0;
+}
+
+/**
+ * `matrix_market_sort_nonzeros_pattern()` sorts the nonzeros according
+ * to their rows and columns for a matrix in the matrix market format
+ * whose `field` is `pattern`.
+ */
+static int matrix_market_sort_nonzeros_pattern(
+    const struct matrix_market * matrix,
+    const struct matrix_market_coordinate_pattern * data,
+    bool include_strict_upper_triangular_part,
+    int64_t * row_ptr,
+    int32_t * j)
+{
+    if (matrix->field != matrix_market_pattern)
+        return EINVAL;
+
+    if ((include_strict_upper_triangular_part &&
+         matrix->symmetry == matrix_market_general) ||
+        (!include_strict_upper_triangular_part &&
+         (matrix->symmetry == matrix_market_symmetric ||
+          matrix->symmetry == matrix_market_skew_symmetric ||
+          matrix->symmetry == matrix_market_hermitian)))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            row_ptr[i+1]++;
+        }
+
+    } else if (include_strict_upper_triangular_part &&
+               (matrix->symmetry == matrix_market_symmetric ||
+                matrix->symmetry == matrix_market_skew_symmetric ||
+                matrix->symmetry == matrix_market_hermitian))
+    {
+        for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
+            int32_t i = data[k].i-1;
+            int32_t l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].j-1) {
+                j[l+1] = j[l];
+                l--;
+            }
+            j[l+1] = data[k].j-1;
+            row_ptr[i+1]++;
+            if (data[k].i == data[k].j)
+                continue;
+            i = data[k].j-1;
+            l = row_ptr[i+1]-1;
+            while (l >= row_ptr[i] && j[l] > data[k].i-1) {
+                j[l+1] = j[l];
+                l--;
+            }
+            j[l+1] = data[k].i-1;
             row_ptr[i+1]++;
         }
 
@@ -1626,7 +1944,6 @@ int matrix_market_sort_nonzeros(
     row_ptr[0] = 0;
 
     /* 3. Sort nonzeros by their rows and columns. */
-    int32_t * j = column_indices;
     switch (matrix->field) {
     case matrix_market_real:
         err = matrix_market_sort_nonzeros_real(
@@ -1637,83 +1954,32 @@ int matrix_market_sort_nonzeros(
         break;
 
     case matrix_market_double:
-        {
-            const struct matrix_market_coordinate_double * data =
-                (const struct matrix_market_coordinate_double *)
-                matrix->data;
-            double * a = (double *) values;
-            for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-                int32_t i = data[k].i-1;
-                int32_t l = row_ptr[i+1]-1;
-                while (l >= row_ptr[i] && j[l] > data[k].j-1) {
-                    j[l+1] = j[l];
-                    a[l+1] = a[l];
-                    l--;
-                }
-                j[l+1] = data[k].j-1;
-                a[l+1] = data[k].a;
-                row_ptr[i+1]++;
-            }
-        }
+        err = matrix_market_sort_nonzeros_double(
+            matrix, (const struct matrix_market_coordinate_double *) matrix->data,
+            include_strict_upper_triangular_part, row_ptr, column_indices, (double *) values);
+        if (err)
+            return err;
         break;
     case matrix_market_complex:
-        {
-            const struct matrix_market_coordinate_complex * data =
-                (const struct matrix_market_coordinate_complex *)
-                matrix->data;
-            float * a = (float *) values;
-            for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-                int32_t i = data[k].i-1;
-                int32_t l = row_ptr[i+1]-1;
-                while (l >= row_ptr[i] && j[l] > data[k].j-1) {
-                    j[l+1] = j[l];
-                    a[2*(l+1)+0] = a[2*(l+1)+0];
-                    a[2*(l+1)+1] = a[2*(l+1)+1];
-                    l--;
-                }
-                j[l+1] = data[k].j-1;
-                a[2*(l+1)+0] = data[k].ar;
-                a[2*(l+1)+1] = data[k].ai;
-                row_ptr[i+1]++;
-            }
-        }
+        err = matrix_market_sort_nonzeros_complex(
+            matrix, (const struct matrix_market_coordinate_complex *) matrix->data,
+            include_strict_upper_triangular_part, row_ptr, column_indices, (float *) values);
+        if (err)
+            return err;
         break;
     case matrix_market_integer:
-        {
-            const struct matrix_market_coordinate_integer * data =
-                (const struct matrix_market_coordinate_integer *)
-                matrix->data;
-            int * a = (int *) values;
-            for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-                int32_t i = data[k].i-1;
-                int32_t l = row_ptr[i+1]-1;
-                while (l >= row_ptr[i] && j[l] > data[k].j-1) {
-                    j[l+1] = j[l];
-                    a[l+1] = a[l];
-                    l--;
-                }
-                j[l+1] = data[k].j-1;
-                a[l+1] = data[k].a;
-                row_ptr[i+1]++;
-            }
-        }
+        err = matrix_market_sort_nonzeros_integer(
+            matrix, (const struct matrix_market_coordinate_integer *) matrix->data,
+            include_strict_upper_triangular_part, row_ptr, column_indices, (int *) values);
+        if (err)
+            return err;
         break;
     case matrix_market_pattern:
-        {
-            const struct matrix_market_coordinate_pattern * data =
-                (const struct matrix_market_coordinate_pattern *)
-                matrix->data;
-            for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-                int32_t i = data[k].i-1;
-                int32_t l = row_ptr[i+1]-1;
-                while (l >= row_ptr[i] && j[l] > data[k].j-1) {
-                    j[l+1] = j[l];
-                    l--;
-                }
-                j[l+1] = data[k].j-1;
-                row_ptr[i+1]++;
-            }
-        }
+        err = matrix_market_sort_nonzeros_pattern(
+            matrix, (const struct matrix_market_coordinate_pattern *) matrix->data,
+            include_strict_upper_triangular_part, row_ptr, column_indices);
+        if (err)
+            return err;
         break;
     default:
         return EINVAL;
