@@ -1447,7 +1447,7 @@ int matrix_market_nonzeros_per_row(
     int64_t * nonzeros_per_row)
 {
     if (matrix->format == matrix_market_array) {
-        for (int32_t i = 0; i < matrix->num_rows; i++)
+        for (int i = 0; i < matrix->num_rows; i++)
             nonzeros_per_row[i] += matrix->num_columns;
 
     } else if (matrix->format == matrix_market_coordinate) {
@@ -1552,8 +1552,8 @@ static int matrix_market_sort_nonzeros_real(
           matrix->symmetry == matrix_market_hermitian)))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1570,8 +1570,8 @@ static int matrix_market_sort_nonzeros_real(
                 matrix->symmetry == matrix_market_hermitian))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1630,8 +1630,8 @@ static int matrix_market_sort_nonzeros_double(
           matrix->symmetry == matrix_market_hermitian)))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1648,8 +1648,8 @@ static int matrix_market_sort_nonzeros_double(
                 matrix->symmetry == matrix_market_hermitian))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1708,8 +1708,8 @@ static int matrix_market_sort_nonzeros_complex(
           matrix->symmetry == matrix_market_hermitian)))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[2*(l+1)+0] = a[2*l+0];
@@ -1728,8 +1728,8 @@ static int matrix_market_sort_nonzeros_complex(
                 matrix->symmetry == matrix_market_hermitian))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[2*(l+1)+0] = a[2*l+0];
@@ -1794,8 +1794,8 @@ static int matrix_market_sort_nonzeros_integer(
           matrix->symmetry == matrix_market_hermitian)))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1812,8 +1812,8 @@ static int matrix_market_sort_nonzeros_integer(
                 matrix->symmetry == matrix_market_hermitian))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 a[l+1] = a[l];
@@ -1871,8 +1871,8 @@ static int matrix_market_sort_nonzeros_pattern(
           matrix->symmetry == matrix_market_hermitian)))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 l--;
@@ -1887,8 +1887,8 @@ static int matrix_market_sort_nonzeros_pattern(
                 matrix->symmetry == matrix_market_hermitian))
     {
         for (int64_t k = 0; k < matrix->num_nonzeros; k++) {
-            int32_t i = data[k].i-1;
-            int32_t l = row_ptr[i+1]-1;
+            int i = data[k].i-1;
+            int64_t l = row_ptr[i+1]-1;
             while (l >= row_ptr[i] && j[l] > data[k].j-1) {
                 j[l+1] = j[l];
                 l--;
@@ -1937,9 +1937,9 @@ int matrix_market_sort_nonzeros(
 
     /* 2. Adjust row pointers to point to the first entry of the
      * previous row. */
-    for (int32_t i = 1; i <= matrix->num_rows; i++)
+    for (int i = 1; i <= matrix->num_rows; i++)
         row_ptr[i] += row_ptr[i-1];
-    for (int32_t i = matrix->num_rows; i > 0; i--)
+    for (int i = matrix->num_rows; i > 0; i--)
         row_ptr[i] = row_ptr[i-1];
     row_ptr[0] = 0;
 
