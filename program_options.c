@@ -50,6 +50,7 @@ static int program_options_init(
     args->destination_vector_format_auto = true;
     args->destination_vector_format = vector_value_f64;
     args->repeat = 1;
+    args->min_flops = 0;
     args->verbose = 0;
     args->help = false;
     args->version = false;
@@ -92,6 +93,7 @@ void program_options_print_help(
     fprintf(f, "  --destination-vector-prec=N\tprecision for destination vector output\n");
     fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
     fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
+    fprintf(f, "  --flops=N\t\t\tminimum number of arithmetic operations to perform\n");
     fprintf(f, "  -v, --verbose\t\t\tbe more verbose\n");
     fprintf(f, "\n");
     fprintf(f, "  -h, --help\t\t\tdisplay this help and exit\n");
@@ -346,6 +348,29 @@ int parse_program_options(
         } else if (strstr((*argv)[0], "--repeat=") == (*argv)[0]) {
             err = parse_int32(
                 (*argv)[0] + strlen("--repeat="), NULL, &args->repeat, NULL);
+            if (err) {
+                program_options_free(args);
+                return err;
+            }
+            num_arguments_consumed++;
+            continue;
+        }
+
+        if (strcmp((*argv)[0], "--flops") == 0) {
+            if (*argc < 2) {
+                program_options_free(args);
+                return EINVAL;
+            }
+            err = parse_int64((*argv)[1], NULL, &args->min_flops, NULL);
+            if (err) {
+                program_options_free(args);
+                return err;
+            }
+            num_arguments_consumed += 2;
+            continue;
+        } else if (strstr((*argv)[0], "--flops=") == (*argv)[0]) {
+            err = parse_int64(
+                (*argv)[0] + strlen("--flops="), NULL, &args->min_flops, NULL);
             if (err) {
                 program_options_free(args);
                 return err;

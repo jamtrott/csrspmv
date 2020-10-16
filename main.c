@@ -376,9 +376,10 @@ int main(int argc, char *argv[])
     }
 
     /* 5. Compute the sparse matrix-vector multiplication. */
+    int repeat = 0;
     int64_t num_flops = 0;
-#pragma omp parallel reduction(err_add:err)
-    for (int i = 0; i < args.repeat; i++) {
+#pragma omp parallel reduction(err_add:err) reduction(max:num_flops) reduction(max:repeat)
+    for (repeat = 0, num_flops = 0; (repeat < args.repeat) || (num_flops < args.min_flops); repeat++) {
         err = csr_matrix_int32_spmv(&csr_matrix, &x, &y, &num_flops);
         if (err)
             break;
@@ -396,13 +397,12 @@ int main(int argc, char *argv[])
     if (args.verbose > 0) {
         clock_gettime(CLOCK_MONOTONIC, &t1);
         fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops\n",
-                timespec_duration(t0, t1), args.repeat, num_flops);
+                timespec_duration(t0, t1), repeat, num_flops);
         fflush(stdout);
     }
 
     /* 6. Write the destination vector to a file. */
     if (args.destination_vector_file) {
-
         if (args.verbose > 0) {
             fprintf(stdout, "vector_to_matrix_market: ");
             fflush(stdout);

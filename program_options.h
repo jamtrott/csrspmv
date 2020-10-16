@@ -53,6 +53,7 @@ struct program_options
     bool destination_vector_format_auto;
     enum vector_value_format destination_vector_format;
     int repeat;
+    int64_t min_flops;
     int verbose;
     bool help;
     bool version;

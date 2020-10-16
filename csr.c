@@ -855,7 +855,6 @@ static int csr_matrix_int32_spmv_binary(
     } else {
         return EINVAL;
     }
-#pragma omp master
     if (num_flops)
         *num_flops += matrix->num_nonzeros;
     return 0;
@@ -1109,7 +1108,6 @@ static int csr_matrix_int32_spmv_int32(
     } else {
         return EINVAL;
     }
-#pragma omp master
     if (num_flops)
         *num_flops += 2*matrix->num_nonzeros;
     return 0;
@@ -1263,7 +1261,6 @@ static int csr_matrix_int32_spmv_int64(
     } else {
         return EINVAL;
     }
-#pragma omp master
     if (num_flops)
         *num_flops += 2*matrix->num_nonzeros;
     return 0;
@@ -1417,7 +1414,6 @@ static int csr_matrix_int32_spmv_f32(
     } else {
         return EINVAL;
     }
-#pragma omp master
     if (num_flops)
         *num_flops += 2*matrix->num_nonzeros;
     return 0;
@@ -1571,7 +1567,6 @@ static int csr_matrix_int32_spmv_f64(
     } else {
         return EINVAL;
     }
-#pragma omp master
     if (num_flops)
         *num_flops += 2*matrix->num_nonzeros;
     return 0;
@@ -1700,7 +1695,6 @@ static int csr_matrix_int32_spmv_complex32(
         err = csr_matrix_int32_spmv_complex32_f32_complex32(matrix, src, dst);
         if (err)
             return err;
-#pragma omp master
         if (num_flops)
             *num_flops += 4*matrix->num_nonzeros;
         break;
@@ -1708,7 +1702,6 @@ static int csr_matrix_int32_spmv_complex32(
         err = csr_matrix_int32_spmv_complex32_f64_complex32(matrix, src, dst);
         if (err)
             return err;
-#pragma omp master
         if (num_flops)
             *num_flops += 4*matrix->num_nonzeros;
         break;
@@ -1716,7 +1709,6 @@ static int csr_matrix_int32_spmv_complex32(
         err = csr_matrix_int32_spmv_complex32_complex32_complex32(matrix, src, dst);
         if (err)
             return err;
-#pragma omp master
         if (num_flops)
             *num_flops += 8*matrix->num_nonzeros;
         break;
