@@ -1,6 +1,45 @@
-Benchmark program for CSR SpMV
-===============================
-
-This is a program for benchmarking the performance of sparse
-matrix-vector multiplication (SpMV) for matrices in the compressed
+This is the README file for csrspmv, a program for benchmarking sparse
+marix-vector multiplication (SpMV) for matrices in the compressed
 sparse row (CSR) format.
+
+  Copyright (C) 2020 James D. Trotter
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+Building
+--------
+The `csrspmv' program can be built with `make'. Compilation and
+linking may be configured through the environment variable `CC', which
+is used to choose a compiler, and `CFLAGS' and `LDFLAGS', which are
+used to set compiler flags and linker flags, respectively. Here is an
+example:
+
+     make CC=gcc CFLAGS="-O3 -march=native"
+
+Usage
+-----
+The `csrpmv' program is used to load a matrix from a file in Matrix
+Market format (see https://math.nist.gov/MatrixMarket/formats.html),
+convert it to a compressed sparse row (CSR) representation, and
+multiply it with a dense vector. The vector can also be loaded from a
+file in the Matrix Market format. Otherwise, a vector of all ones is
+used. The vector that results from the multiplication can also be
+written to a file in the Matrix Market format.
+
+If the option `--verbose' is supplied, then some information about the
+matrix is printed, as well as the information about the matrix-vector
+multiplication, such as the time spent and number of arithmetic
+operations performed.
+
+Here is an example of the output:
+
+     ./csrspmv --verbose test.mtx
+     matrix_market_read: 0.000128 seconds matrix object coordinate format real field general symmetry 4 rows 5 columns 7 nonzeros
+     csr_matrix_int32_from_matrix_market: 0.018245 seconds 4 rows 5 columns 7 nonzeros
+     csr_matrix_int32_spmv: 0.000089 seconds 1 multiplications 14 flops
+
+Copying
+-------
+csrspmv is free software. See the file COPYING for copying conditions.
