@@ -86,11 +86,11 @@ void program_options_print_help(
     fprintf(f, "  \t\t\t\tf32, f64 or complex32.\n");
     fprintf(f, "  --source-vector=FILE\t\tmatrix market file for source vector,\n");
     fprintf(f, "  \t\t\t\totherwise a vector of all ones is used.\n");
-    fprintf(f, "  --source-vector-format=FORMAT\tchoose one of: f32, f64 or complex32.\n");
+    fprintf(f, "  --source-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
     fprintf(f, "  --destination-vector=FILE\tmatrix market file for destination vector\n");
     fprintf(f, "  --destination-vector-width=N\tfield width for destination vector output\n");
     fprintf(f, "  --destination-vector-prec=N\tprecision for destination vector output\n");
-    fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: f32, f64 or complex32.\n");
+    fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
     fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
     fprintf(f, "  -v, --verbose\t\t\tbe more verbose\n");
     fprintf(f, "\n");
