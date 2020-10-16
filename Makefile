@@ -21,33 +21,32 @@
 
 csrspmv = csrspmv
 
-all: csrspmv
+all: $(csrspmv)
 clean:
-	rm -f $(csrspmv_c_objects) csrspmv
+	rm -f $(csrspmv_c_objects) $(csrspmv)
 .PHONY: all clean
 
-INCLUDES = -iquote src
-CFLAGS += -g -Wall
+CFLAGS += -g -Wall -iquote src
 
 ifndef NO_OPENMP
 CFLAGS += -fopenmp
 endif
 
 csrspmv_c_sources = \
-	csr.c \
-	main.c \
-	matrix_market.c \
-	parse.c \
-	program_options.c \
-	vector.c
+	src/csr.c \
+	src/main.c \
+	src/matrix_market.c \
+	src/parse.c \
+	src/program_options.c \
+	src/vector.c
 csrspmv_c_headers = \
-	csr.h \
-	matrix_market.h \
-	parse.h \
-	program_options.h \
-	vector.h
+	src/csr.h \
+	src/matrix_market.h \
+	src/parse.h \
+	src/program_options.h \
+	src/vector.h
 csrspmv_c_objects := $(foreach x,$(csrspmv_c_sources),$(x:.c=.o))
 $(csrspmv_c_objects): %.o: %.c $(csrspmv_c_headers)
-	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
-csrspmv: $(csrspmv_c_objects)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
+$(csrspmv): $(csrspmv_c_objects)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
