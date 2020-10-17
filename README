@@ -25,8 +25,13 @@ Market format (see https://math.nist.gov/MatrixMarket/formats.html),
 convert it to a compressed sparse row (CSR) representation, and
 multiply it with a dense vector. The vector can also be loaded from a
 file in the Matrix Market format. Otherwise, a vector of all ones is
-used. The vector that results from the multiplication can also be
-written to a file in the Matrix Market format.
+used. The vector resulting from the multiplication can also be written
+to a file in the Matrix Market format.
+
+Since OpenMP is used for shared-memory parallel computations, the
+environment variable `OMP_NUM_THREADS' can be set to control the
+number of threads that are used. In addition, `OMP_PROC_BIND' can be
+set to bind threads to particular cores.
 
 If the option `--verbose' is supplied, then some information about the
 matrix is printed, as well as the information about the matrix-vector
