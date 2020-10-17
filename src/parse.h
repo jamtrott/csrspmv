@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -126,7 +126,7 @@ int parse_float(
  * `parse_double()` parses a string to produce a number that may be
  * represented as `double`.
  *
- * The number is parsed using `strtof()`, following the conventions
+ * The number is parsed using `strtod()`, following the conventions
  * documented in the man page for that function.  In addition, some
  * further error checking is performed to ensure that the number is
  * parsed correctly.  The parsed number is stored in `number`.

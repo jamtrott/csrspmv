@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -95,7 +95,8 @@ static int csr_value_format_size(
 }
 
 /**
- * `csr_matrix_int32_alloc()` allocates a sparse matrix in CSR format.
+ * `csr_matrix_int32_alloc()` allocates storage for a sparse matrix in
+ * CSR format.
  */
 int csr_matrix_int32_alloc(
     struct csr_matrix_int32 * matrix,
@@ -147,7 +148,8 @@ int csr_matrix_int32_alloc(
 }
 
 /**
- * `csr_matrix_int32_free()` destroys the given matrix.
+ * `csr_matrix_int32_free()` frees memory and other resources
+ * associated with a matrix.
  */
 void csr_matrix_int32_free(
     struct csr_matrix_int32 * matrix)
@@ -395,7 +397,7 @@ int csr_matrix_int32_print(
 
 /**
  * `csr_matrix_int32_from_matrix_market()` converts a matrix in the
- * matrix market format to a CSR matrix.
+ * Matrix Market format to a CSR matrix.
  */
 int csr_matrix_int32_from_matrix_market(
     struct csr_matrix_int32 * matrix,

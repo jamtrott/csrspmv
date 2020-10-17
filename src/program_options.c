@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -58,8 +58,8 @@ static int program_options_init(
 }
 
 /**
- * `program_options_free()` frees any memory or resources associated
- * with parsing program options.
+ * `program_options_free()` frees memory and other resources
+ * associated with parsing program options.
  */
 void program_options_free(
     struct program_options * args)
@@ -92,8 +92,8 @@ void program_options_print_help(
     fprintf(f, "  --destination-vector-width=N\tfield width for destination vector output\n");
     fprintf(f, "  --destination-vector-prec=N\tprecision for destination vector output\n");
     fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
-    fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
     fprintf(f, "  --flops=N\t\t\tminimum number of arithmetic operations to perform\n");
+    fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
     fprintf(f, "  -v, --verbose\t\t\tbe more verbose\n");
     fprintf(f, "\n");
     fprintf(f, "  -h, --help\t\t\tdisplay this help and exit\n");

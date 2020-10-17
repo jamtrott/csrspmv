@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -110,7 +110,8 @@ int vector_init(
     void * values);
 
 /**
- * `vector_free()` destroys the given vector.
+ * `vector_free()` frees memory and other resources associated with a
+ * vector.
  */
 void vector_free(
     struct vector * vector);
@@ -127,15 +128,15 @@ int vector_print(
     int precision);
 
 /**
- * `vector_from_matrix_market()` converts a vector in the matrix
- * market format to a dense vector.
+ * `vector_from_matrix_market()` converts a vector in the Matrix
+ * Market format to a dense vector.
  */
 int vector_from_matrix_market(
     struct vector * vector,
     const struct matrix_market * matrix_market);
 
 /**
- * `vector_to_matrix_market()` converts a vector to matrix market
+ * `vector_to_matrix_market()` converts a vector to Matrix Market
  * format.
  */
 int vector_to_matrix_market(

@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -17,7 +17,7 @@
  *
  * Authors: James D. Trotter <james@simula.no>
  *
- * Matrix market file format.
+ * Matrix Market file format.
  */
 
 #include "matrix_market.h"
@@ -36,8 +36,8 @@
 #include <string.h>
 
 /**
- * `matrix_market_object_str()` is a string representing the matrix
- * market object type.
+ * `matrix_market_object_str()` is a string representing the Matrix
+ * Market object type.
  */
 const char * matrix_market_object_str(
     enum matrix_market_object object)
@@ -50,8 +50,8 @@ const char * matrix_market_object_str(
 }
 
 /**
- * `matrix_market_format_str()` is a string representing the matrix
- * market format type.
+ * `matrix_market_format_str()` is a string representing the Matrix
+ * Market format type.
  */
 const char * matrix_market_format_str(
     enum matrix_market_format format)
@@ -64,8 +64,8 @@ const char * matrix_market_format_str(
 }
 
 /**
- * `matrix_market_field_str()` is a string representing the matrix
- * market field type.
+ * `matrix_market_field_str()` is a string representing the Matrix
+ * Market field type.
  */
 const char * matrix_market_field_str(
     enum matrix_market_field field)
@@ -81,8 +81,8 @@ const char * matrix_market_field_str(
 }
 
 /**
- * `matrix_market_symmetry_str()` is a string representing the matrix
- * market symmetry type.
+ * `matrix_market_symmetry_str()` is a string representing the Matrix
+ * Market symmetry type.
  */
 const char * matrix_market_symmetry_str(
     enum matrix_market_symmetry symmetry)
@@ -97,8 +97,8 @@ const char * matrix_market_symmetry_str(
 }
 
 /**
- * `matrix_market_free()` frees resources associated with matrix
- * market data.
+ * `matrix_market_free()` frees resources associated with a matrix in
+ * Matrix Market format.
  */
 void matrix_market_free(
     struct matrix_market * matrix)
@@ -110,8 +110,7 @@ void matrix_market_free(
 }
 
 /**
- * `matrix_market_strerror()` is a string containing a description of
- * the given error code.
+ * `matrix_market_strerror()` is a string describing an error code.
  */
 const char * matrix_market_strerror(int err)
 {
@@ -1018,8 +1017,8 @@ static int matrix_market_read_data(
 }
 
 /**
- * `matrix_market_read()` reads a matrix from a stream in the matrix
- * market file format.
+ * `matrix_market_read()` reads a matrix from a stream in the Matrix
+ * Market format.
  */
 int matrix_market_read(
     struct matrix_market * matrix,
@@ -1283,8 +1282,8 @@ int matrix_market_write_vector(
 }
 
 /**
- * `matrix_market_write()` writes a matrix to a stream in the matrix
- * market format.
+ * `matrix_market_write()` writes a matrix to a stream in the Matrix
+ * Market format.
  */
 int matrix_market_write(
     const struct matrix_market * matrix,
@@ -1316,7 +1315,7 @@ int matrix_market_write(
 
 /**
  * `matrix_market_num_nonzeros()` is the total number of nonzeros a
- * matrix in the matrix market format, including strictly upper
+ * matrix in the Matrix Market format, including strictly upper
  * triangular parts of symmetric, skew-symmetric or Hermitian
  * matrices.
  */
@@ -1345,7 +1344,7 @@ int matrix_market_num_nonzeros(
 
 /**
  * `matrix_market_num_nonzeros_diagonal()` is the number of nonzeros
- * on the main diagonal of a matrix in the matrix market format.
+ * on the main diagonal of a matrix in the Matrix Market format.
  */
 int matrix_market_num_nonzeros_diagonal(
     const struct matrix_market * matrix,
@@ -1430,7 +1429,7 @@ int matrix_market_num_nonzeros_diagonal(
 
 /**
  * `matrix_market_nonzeros_per_row()` counts the number of nonzeros in
- * each row of a matrix in the matrix market format.
+ * each row of a matrix in the Matrix Market format.
  *
  * If `include_strict_upper_triangular_part` is `true` and `symmetry`
  * is `symmetric`, `skew-symmetric` or `hermitian`, then nonzeros in
@@ -1915,7 +1914,11 @@ static int matrix_market_sort_nonzeros_pattern(
 
 /**
  * `matrix_market_sort_nonzeros()` sorts the nonzeros according to
- * their rows and columns for a matrix in the matrix market format.
+ * their rows and columns for a matrix in the Matrix Market format.
+ *
+ * If `symmetry` is `symmetric`, `skew-symmetric` or `hermitian`, then
+ * nonzero values of the lower and strict upper triangular parts of
+ * the matrix are included.
  */
 int matrix_market_sort_nonzeros(
     const struct matrix_market * matrix,

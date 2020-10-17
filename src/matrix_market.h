@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -29,7 +29,7 @@
 
 /**
  * `matrix_market_object` is used to enumerate different kinds of
- * matrix market objects.
+ * Matrix Market objects.
  */
 enum matrix_market_object
 {
@@ -38,15 +38,15 @@ enum matrix_market_object
 };
 
 /**
- * `matrix_market_object_str()` is a string representing the matrix
- * market object type.
+ * `matrix_market_object_str()` is a string representing the Matrix
+ * Market object type.
  */
 const char * matrix_market_object_str(
     enum matrix_market_object object);
 
 /**
  * `matrix_market_format` is used to enumerate different kinds of
- * matrix market formats.
+ * Matrix Market formats.
  */
 enum matrix_market_format
 {
@@ -55,15 +55,15 @@ enum matrix_market_format
 };
 
 /**
- * `matrix_market_format_str()` is a string representing the matrix
- * market format type.
+ * `matrix_market_format_str()` is a string representing the Matrix
+ * Market format type.
  */
 const char * matrix_market_format_str(
     enum matrix_market_format format);
 
 /**
  * `matrix_market_field` is used to enumerate different kinds of
- * fields for matrix values in matrix market files.
+ * fields for matrix values in Matrix Market files.
  */
 enum matrix_market_field
 {
@@ -75,15 +75,15 @@ enum matrix_market_field
 };
 
 /**
- * `matrix_market_field_str()` is a string representing the matrix
- * market field type.
+ * `matrix_market_field_str()` is a string representing the Matrix
+ * Market field type.
  */
 const char * matrix_market_field_str(
     enum matrix_market_field field);
 
 /**
  * `matrix_market_symmetry` is used to enumerate different kinds of
- * symmetry for matrices in matrix market files.
+ * symmetry for matrices in Matrix Market files.
  */
 enum matrix_market_symmetry
 {
@@ -94,15 +94,15 @@ enum matrix_market_symmetry
 };
 
 /**
- * `matrix_market_symmetry_str()` is a string representing the matrix
- * market symmetry type.
+ * `matrix_market_symmetry_str()` is a string representing the Matrix
+ * Market symmetry type.
  */
 const char * matrix_market_symmetry_str(
     enum matrix_market_symmetry symmetry);
 
 /**
  * `matrix_market_coordinate_real` represents a nonzero matrix entry
- * in a matrix market file with `coordinate` format and `real` field.
+ * in a Matrix Market file with `coordinate` format and `real` field.
  */
 struct matrix_market_coordinate_real
 {
@@ -112,7 +112,7 @@ struct matrix_market_coordinate_real
 
 /**
  * `matrix_market_coordinate_double` represents a nonzero matrix entry
- * in a matrix market file with `coordinate` format and `double` field.
+ * in a Matrix Market file with `coordinate` format and `double` field.
  */
 struct matrix_market_coordinate_double
 {
@@ -122,7 +122,7 @@ struct matrix_market_coordinate_double
 
 /**
  * `matrix_market_coordinate_complex` represents a nonzero matrix entry
- * in a matrix market file with `coordinate` format and `complex` field.
+ * in a Matrix Market file with `coordinate` format and `complex` field.
  */
 struct matrix_market_coordinate_complex
 {
@@ -132,7 +132,7 @@ struct matrix_market_coordinate_complex
 
 /**
  * `matrix_market_coordinate_integer` represents a nonzero matrix entry
- * in a matrix market file with `coordinate` format and `integer` field.
+ * in a Matrix Market file with `coordinate` format and `integer` field.
  */
 struct matrix_market_coordinate_integer
 {
@@ -142,7 +142,7 @@ struct matrix_market_coordinate_integer
 
 /**
  * `matrix_market_coordinate_pattern` represents a nonzero matrix entry
- * in a matrix market file with `coordinate` format and `pattern` field.
+ * in a Matrix Market file with `coordinate` format and `pattern` field.
  */
 struct matrix_market_coordinate_pattern
 {
@@ -150,13 +150,13 @@ struct matrix_market_coordinate_pattern
 };
 
 /**
- * `matrix_market` is a data structure for matrices in the matrix
- * market format.
+ * `matrix_market` is a data structure for matrices in the Matrix
+ * Market format.
  */
 struct matrix_market
 {
     /**
-     * `object` is the type of matrix market object: `matrix` or `vector`.
+     * `object` is the type of Matrix Market object: `matrix` or `vector`.
      */
     enum matrix_market_object object;
 
@@ -242,15 +242,15 @@ struct matrix_market
 };
 
 /**
- * `matrix_market_free()` frees resources associated with matrix
- * market data.
+ * `matrix_market_free()` frees resources associated with a matrix in
+ * Matrix Market format.
  */
 void matrix_market_free(
     struct matrix_market * matrix);
 
 /**
  * `matrix_market_error` are error codes that are used for error
- * handling when parsing files in the matrix market format.
+ * handling when parsing files in the Matrix Market format.
  */
 enum matrix_market_error
 {
@@ -268,14 +268,13 @@ enum matrix_market_error
 };
 
 /**
- * `matrix_market_strerror()` is a string containing a description of
- * the given error code.
+ * `matrix_market_strerror()` is a string describing an error code.
  */
 const char * matrix_market_strerror(int err);
 
 /**
- * `matrix_market_read()` reads a matrix from a stream in the matrix
- * market format.
+ * `matrix_market_read()` reads a matrix from a stream in the Matrix
+ * Market format.
  */
 int matrix_market_read(
     struct matrix_market * matrix,
@@ -284,8 +283,8 @@ int matrix_market_read(
     int * column_number);
 
 /**
- * `matrix_market_write()` writes a matrix to a stream in the matrix
- * market format.
+ * `matrix_market_write()` writes a matrix to a stream in the Matrix
+ * Market format.
  */
 int matrix_market_write(
     const struct matrix_market * matrix,
@@ -295,7 +294,7 @@ int matrix_market_write(
 
 /**
  * `matrix_market_num_nonzeros()` is the total number of nonzeros a
- * matrix in the matrix market format, including strictly upper
+ * matrix in the Matrix Market format, including strictly upper
  * triangular parts of symmetric, skew-symmetric or Hermitian
  * matrices.
  */
@@ -305,7 +304,7 @@ int matrix_market_num_nonzeros(
 
 /**
  * `matrix_market_num_nonzeros_diagonal()` is the number of nonzeros
- * on the main diagonal of a matrix in the matrix market format.
+ * on the main diagonal of a matrix in the Matrix Market format.
  */
 int matrix_market_num_nonzeros_diagonal(
     const struct matrix_market * matrix,
@@ -313,7 +312,7 @@ int matrix_market_num_nonzeros_diagonal(
 
 /**
  * `matrix_market_nonzeros_per_row()` counts the number of nonzeros in
- * each row of a matrix in the matrix market format.
+ * each row of a matrix in the Matrix Market format.
  *
  * If `include_strict_upper_triangular_part` is `true` and `symmetry`
  * is `symmetric`, `skew-symmetric` or `hermitian`, then nonzeros in
@@ -330,17 +329,8 @@ int matrix_market_nonzeros_per_row(
     int64_t * nonzeros_per_row);
 
 /**
- * `matrix_market_nonzeros_per_column_exclude_diagonal()` counts the
- * number of nonzeros in each column of a matrix in the matrix market
- * format, excluding nonzeros that lie on the main diagonal.
- */
-int matrix_market_nonzeros_per_column_exclude_diagonal(
-    const struct matrix_market * matrix,
-    int64_t * nonzeros_per_column);
-
-/**
  * `matrix_market_sort_nonzeros()` sorts the nonzeros according to
- * their rows and columns for a matrix in the matrix market format.
+ * their rows and columns for a matrix in the Matrix Market format.
  *
  * If `symmetry` is `symmetric`, `skew-symmetric` or `hermitian`, then
  * nonzero values of the lower and strict upper triangular parts of

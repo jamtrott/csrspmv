@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -67,7 +67,7 @@ struct csr_matrix_int32
     int32_t num_rows;
 
     /**
-     * `num_rows` is the number of matrix columns.
+     * `num_columns` is the number of matrix columns.
      */
     int32_t num_columns;
 
@@ -88,23 +88,26 @@ struct csr_matrix_int32
     int64_t num_nonzeros;
 
     /**
-     * `column_indices` is the column indices of each nonzero.
+     * `column_indices` is an array containing the column index of
+     * each nonzero matrix entry.
      */
     int32_t * column_indices;
 
     /**
-     * `value_format` is the type associated with each nonzero.
+     * `value_format` is the type associated with nonzero values.
      */
     enum csr_value_format value_format;
 
     /**
-     * `values` is the value associated with each nonzero.
+     * `values` is an array containing the value associated with each
+     * nonzero matrix entry.
      */
     void * values;
 };
 
 /**
- * `csr_matrix_int32_alloc()` allocates a sparse matrix in CSR format.
+ * `csr_matrix_int32_alloc()` allocates storage for a sparse matrix in
+ * CSR format.
  */
 int csr_matrix_int32_alloc(
     struct csr_matrix_int32 * matrix,
@@ -114,7 +117,8 @@ int csr_matrix_int32_alloc(
     enum csr_value_format value_format);
 
 /**
- * `csr_matrix_int32_free()` destroys the given matrix.
+ * `csr_matrix_int32_free()` frees memory and other resources
+ * associated with a matrix.
  */
 void csr_matrix_int32_free(
     struct csr_matrix_int32 * matrix);
@@ -152,7 +156,7 @@ int csr_matrix_int32_print(
 
 /**
  * `csr_matrix_int32_from_matrix_market()` converts a matrix in the
- * matrix market format to a CSR matrix.
+ * Matrix Market format to a CSR matrix.
  */
 int csr_matrix_int32_from_matrix_market(
     struct csr_matrix_int32 * matrix,

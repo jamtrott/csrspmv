@@ -1,4 +1,4 @@
-/**
+/*
  * Benchmark program for CSR SpMV
  * Copyright (C) 2020 James D. Trotter
  *
@@ -68,8 +68,8 @@ int parse_program_options(
     struct program_options * args);
 
 /**
- * `program_options_free()` frees any memory or resources associated
- * with parsing program options.
+ * `program_options_free()` frees memory and other resources
+ * associated with parsing program options.
  */
 void program_options_free(
     struct program_options * args);
