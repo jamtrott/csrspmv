@@ -20,7 +20,7 @@ example:
 
 Usage
 -----
-The `csrpmv' program is used to load a matrix from a file in Matrix
+The `csrspmv' program is used to load a matrix from a file in Matrix
 Market format (see https://math.nist.gov/MatrixMarket/formats.html),
 convert it to a compressed sparse row (CSR) representation, and
 multiply it with a dense vector. The vector can also be loaded from a
