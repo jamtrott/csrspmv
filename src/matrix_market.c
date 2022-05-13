@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2021 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
+ * Last modified: 2021-01-17
  *
  * Matrix Market file format.
  */
@@ -292,7 +293,6 @@ static int matrix_market_read_comment_lines(
         /* 1.2. Read the next line as a comment line. */
         err = matrix_market_read_line(f, line_max, linebuf);
         if (err) {
-            free(next->comment_line);
             free(next);
             while (node) {
                 struct comment_line_list * prev = node->prev;
@@ -368,7 +368,7 @@ static int matrix_market_read_size_line(
         return err;
 
     const char * s = linebuf;
-    if (format == matrix_market_array) {
+    if (object == matrix_market_matrix && format == matrix_market_array) {
         /* 2. Parse the number of rows. */
         err = parse_int32(s, " ", num_rows, &s);
         if (err == EINVAL) {
@@ -395,7 +395,7 @@ static int matrix_market_read_size_line(
         }
         (*line_number)++; *column_number = 1;
 
-    } else if (format == matrix_market_coordinate) {
+    } else if (object == matrix_market_matrix && format == matrix_market_coordinate) {
         /* 2. Parse the number of rows. */
         err = parse_int32(s, " ", num_rows, &s);
         if (err == EINVAL) {
@@ -425,6 +425,23 @@ static int matrix_market_read_size_line(
             return MATRIX_MARKET_ERR;
         }
         (*line_number)++; *column_number = 1;
+
+    } else if (object == matrix_market_vector && format == matrix_market_array) {
+        /* 1. Parse the number of rows. */
+        err = parse_int32(s, "\n", num_rows, NULL);
+        if (err == EINVAL) {
+            return MATRIX_MARKET_ERR_INVALID_SIZE;
+        } else if (err) {
+            errno = err;
+            return MATRIX_MARKET_ERR;
+        }
+        (*line_number)++; *column_number = 1;
+        *num_columns = 1;
+        *num_nonzeros = *num_rows;
+
+    } else {
+        errno = ENOTSUP;
+        return MATRIX_MARKET_ERR;
     }
 
     return 0;
@@ -1065,6 +1082,8 @@ int matrix_market_read(
         &matrix->num_rows, &matrix->num_columns, &matrix->num_nonzeros,
         f, line_max, linebuf, line_number, column_number);
     if (err) {
+        for (int i = 0; i < matrix->num_comment_lines; i++)
+            free(matrix->comment_lines[i]);
         free(matrix->comment_lines);
         matrix->comment_lines = NULL;
         free(linebuf);
@@ -1078,6 +1097,8 @@ int matrix_market_read(
         &matrix->data, f, line_max, linebuf,
         line_number, column_number);
     if (err) {
+        for (int i = 0; i < matrix->num_comment_lines; i++)
+            free(matrix->comment_lines[i]);
         free(matrix->comment_lines);
         matrix->comment_lines = NULL;
         free(linebuf);

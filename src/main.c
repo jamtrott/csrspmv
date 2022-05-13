@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2021 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
+ * Last modified: 2021-01-17
  *
  * Benchmarking program for sparse matrix-vector multiplication (SpMV)
  * with matrices in compressed sparse row (CSR) format.
@@ -171,7 +172,7 @@ int main(int argc, char *argv[])
         &matrix_market, f, &line_number, &column_number);
     if (err) {
         fprintf(stderr, "%s: Error: %s:%d:%d: %s\n",
-                program_invocation_name,
+                program_invocation_short_name,
                 args.matrix_file, line_number, column_number,
                 matrix_market_strerror(err));
         fclose(f);
@@ -259,7 +260,7 @@ int main(int argc, char *argv[])
             &matrix_market, f, &line_number, &column_number);
         if (err) {
             fprintf(stderr, "%s: Error: %s:%d:%d: %s\n",
-                    program_invocation_name,
+                    program_invocation_short_name,
                     args.source_vector_file, line_number, column_number,
                     matrix_market_strerror(err));
             fclose(f);
@@ -271,7 +272,7 @@ int main(int argc, char *argv[])
 
         err = vector_from_matrix_market(&x, &matrix_market);
         if (err) {
-            fprintf(stderr, "%s: %s: %s\n", program_invocation_name,
+            fprintf(stderr, "%s: %s: %s\n", program_invocation_short_name,
                     args.source_vector_file, strerror(err));
             matrix_market_free(&matrix_market);
             csr_matrix_int32_free(&csr_matrix);
@@ -385,7 +386,7 @@ int main(int argc, char *argv[])
             break;
     }
     if (err) {
-        fprintf(stderr, "%s: %s\n", program_invocation_name,
+        fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                 strerror(err));
         vector_free(&y);
         vector_free(&x);
@@ -396,8 +397,9 @@ int main(int argc, char *argv[])
 
     if (args.verbose > 0) {
         clock_gettime(CLOCK_MONOTONIC, &t1);
-        fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops\n",
-                timespec_duration(t0, t1), repeat, num_flops);
+        fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops (%.1f Gflop/s)\n",
+                timespec_duration(t0, t1), repeat, num_flops,
+                (double) num_flops * 1e-9 / (double) timespec_duration(t0, t1));
         fflush(stdout);
     }
 
@@ -415,7 +417,7 @@ int main(int argc, char *argv[])
         err = matrix_market_format_comment(
             argc, argv, &comment_lines[0], &comment_lines[1]);
         if (err) {
-            fprintf(stderr, "%s: %s\n", program_invocation_name,
+            fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                     strerror(err));
             vector_free(&y);
             vector_free(&x);
@@ -430,7 +432,7 @@ int main(int argc, char *argv[])
             &y, &matrix_market_vector,
             num_comment_lines, (const char **) comment_lines);
         if (err) {
-            fprintf(stderr, "%s: %s\n", program_invocation_name,
+            fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                     strerror(err));
             free(comment_lines[1]);
             free(comment_lines[0]);
@@ -472,7 +474,7 @@ int main(int argc, char *argv[])
             args.destination_vector_precision);
         if (err) {
             fprintf(stderr, "%s: %s: %s\n",
-                    program_invocation_name,
+                    program_invocation_short_name,
                     args.destination_vector_file,
                     strerror(err));
             matrix_market_free(&matrix_market_vector);

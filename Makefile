@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # Authors: James D. Trotter <james@simula.no>
+# Last modified: 2020-10-17
 #
 # Benchmarking program for sparse matrix-vector multiplication (SpMV)
 # with matrices in compressed sparse row (CSR) format.

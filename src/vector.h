@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
+ * Last modified: 2020-10-17
  *
  * Dense vectors represented as arrays.
  */
