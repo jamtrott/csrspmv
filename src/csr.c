@@ -1528,6 +1528,7 @@ static int csr_matrix_int32_spmv_f64_f64_f64(
     const double * restrict a = (const double * restrict) matrix->values;
     const double * restrict x = (const double * restrict) src->values;
     double * restrict y = (double * restrict) dst->values;
+#if 1
 #pragma omp for
     for (int32_t i = 0; i < matrix->num_rows; i++) {
         double z = 0.0;
@@ -1535,6 +1536,20 @@ static int csr_matrix_int32_spmv_f64_f64_f64(
             z += a[k] * x[j[k]];
         y[i] += z;
     }
+#else
+#pragma omp for
+    for (int32_t i = 0; i < matrix->num_rows; i++) {
+        double z = 0.0;
+        int64_t k = p[i];
+        int64_t rowlen = p[i+1]-p[i];
+        while (rowlen > 0) {
+            z += a[k] * x[j[k]];
+            k++;
+            rowlen--;
+        }
+        y[i] += z;
+    }
+#endif
     return 0;
 }
 
