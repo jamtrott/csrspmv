@@ -53,6 +53,7 @@ static int program_options_init(
     args->destination_vector_format = vector_value_f64;
     args->repeat = 1;
     args->min_flops = 0;
+    args->count_nonzeros = 0;
     args->verbose = 0;
     args->help = false;
     args->version = false;
@@ -97,6 +98,7 @@ void program_options_print_help(
     fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
     fprintf(f, "  --flops=N\t\t\tminimum number of arithmetic operations to perform\n");
     fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
+    fprintf(f, "  --count-nonzeros\t\tdisplay the number of nonzeros assigned to each thread and exit\n");
     fprintf(f, "  -v, --verbose\t\t\tbe more verbose\n");
     fprintf(f, "\n");
     fprintf(f, "  -h, --help\t\t\tdisplay this help and exit\n");
@@ -384,6 +386,12 @@ int parse_program_options(
 
         if (strcmp((*argv)[0], "--include-symmetric-part") == 0) {
             args->include_symmetric_part = true;
+            num_arguments_consumed++;
+            continue;
+        }
+
+        if (strcmp((*argv)[0], "--count-nonzeros") == 0) {
+            args->count_nonzeros = 1;
             num_arguments_consumed++;
             continue;
         }

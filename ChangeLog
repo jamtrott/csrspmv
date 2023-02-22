@@ -1,4 +1,7 @@
-2023-02-22 James D. Trotter <james@simula.no>
+2023-02-22  James D. Trotter  <james@simula.no>
+
+	- Add an option for printing the number of rows and nonzeros
+	assigned to each thread
 
 	- Add an option for including both lower and upper triangular
 	parts of symmetric matrices

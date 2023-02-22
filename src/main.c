@@ -241,6 +241,29 @@ int main(int argc, char *argv[])
                 csr_matrix.num_nonzeros);
     }
 
+    if (args.count_nonzeros) {
+        fprintf(stdout, "thread\trows\tnonzeros\n");
+#pragma omp parallel
+        {
+            int32_t num_rows = 0;
+            int64_t num_nonzeros = 0;
+#pragma omp for
+            for (int i = 0; i < csr_matrix.num_rows; i++) {
+                num_nonzeros += csr_matrix.row_ptr[i+1]-csr_matrix.row_ptr[i];
+                num_rows++;
+            }
+#pragma omp for ordered schedule(static,1)
+            for (int p = 0; p < omp_get_num_threads(); p++) {
+                #pragma omp ordered
+                fprintf(stdout, "%6d\t%4d\t%8"PRId64"\n", omp_get_thread_num()+1, num_rows, num_nonzeros);
+                fflush(stdout);
+            }
+        }
+        csr_matrix_int32_free(&csr_matrix);
+        program_options_free(&args);
+        return EXIT_SUCCESS;
+    }
+
     /* 3. Load or generate a source vector. */
     struct vector x;
     if (args.source_vector_file) {
