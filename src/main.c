@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2021 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2021-01-17
+ * Last modified: 2023-02-22
  *
  * Benchmarking program for sparse matrix-vector multiplication (SpMV)
  * with matrices in compressed sparse row (CSR) format.
@@ -40,7 +40,7 @@
 const char * program_name = "csrspmv";
 const char * program_version = "1.0";
 const char * program_copyright =
-    "Copyright (C) 2020 James D. Trotter";
+    "Copyright (C) 2023 James D. Trotter";
 const char * program_license =
     "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\n"
     "This is free software: you are free to change and redistribute it.\n"
@@ -221,7 +221,8 @@ int main(int argc, char *argv[])
     /* 2. Convert to a compressed sparse row format. */
     struct csr_matrix_int32 csr_matrix;
     err = csr_matrix_int32_from_matrix_market(
-        &csr_matrix, &matrix_market, matrix_format);
+        &csr_matrix, &matrix_market, matrix_format,
+        args.include_symmetric_part);
     if (err) {
         fprintf(stderr, "%s: %s\n", program_invocation_short_name,
                 strerror(err));
@@ -397,9 +398,10 @@ int main(int argc, char *argv[])
 
     if (args.verbose > 0) {
         clock_gettime(CLOCK_MONOTONIC, &t1);
-        fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops (%.1f Gflop/s)\n",
+        fprintf(stdout, "%.6f seconds %d multiplications %"PRId64" flops (%.2f Gflop/s, %.3f Gnz/s)\n",
                 timespec_duration(t0, t1), repeat, num_flops,
-                (double) num_flops * 1e-9 / (double) timespec_duration(t0, t1));
+                (double) num_flops * 1e-9 / (double) timespec_duration(t0, t1),
+                (double) csr_matrix.num_nonzeros * 1e-9 * (double) repeat / (double) timespec_duration(t0, t1));
         fflush(stdout);
     }
 

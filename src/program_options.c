@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2020-10-17
+ * Last modified: 2023-02-22
  *
  * Parsing of program options.
  */
@@ -45,6 +45,7 @@ static int program_options_init(
     args->destination_vector_field_width = 0;
     args->destination_vector_precision = -1;
     args->matrix_format_auto = true;
+    args->include_symmetric_part = false;
     args->matrix_format = csr_value_f64;
     args->source_vector_format_auto = true;
     args->source_vector_format = vector_value_f64;
@@ -86,6 +87,7 @@ void program_options_print_help(
     fprintf(f, " Options are:\n");
     fprintf(f, "  --matrix-format=FORMAT\tchoose one of: binary, int32, int64,\n");
     fprintf(f, "  \t\t\t\tf32, f64 or complex32.\n");
+    fprintf(f, "  --include-symmetric-part\tuse both lower and upper triangular parts of a symmetric matrix\n");
     fprintf(f, "  --source-vector=FILE\t\tmatrix market file for source vector,\n");
     fprintf(f, "  \t\t\t\totherwise a vector of all ones is used.\n");
     fprintf(f, "  --source-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
@@ -376,6 +378,12 @@ int parse_program_options(
                 program_options_free(args);
                 return err;
             }
+            num_arguments_consumed++;
+            continue;
+        }
+
+        if (strcmp((*argv)[0], "--include-symmetric-part") == 0) {
+            args->include_symmetric_part = true;
             num_arguments_consumed++;
             continue;
         }

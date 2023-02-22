@@ -1,7 +1,14 @@
+2023-02-22 James D. Trotter <james@simula.no>
+
+	- Add an option for including both lower and upper triangular
+	parts of symmetric matrices
+
+	- Output number of nonzeros processed per second.
+
 2020-10-15 James D. Trotter <james@simula.no>
 
         Initial version.
 
-Copyright (C) 2020 James D. Trotter
+Copyright (C) 2023 James D. Trotter
 Copying and distribution of this file, with or without modification, are
 permitted provided the copyright notice and this notice are preserved.

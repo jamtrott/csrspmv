@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2020-10-17
+ * Last modified: 2023-02-22
  *
  * Matrix market file format.
  */
@@ -301,7 +301,8 @@ int matrix_market_write(
  */
 int matrix_market_num_nonzeros(
     const struct matrix_market * matrix,
-    int64_t * nonzeros);
+    int64_t * nonzeros,
+    bool include_symmetric_part);
 
 /**
  * `matrix_market_num_nonzeros_diagonal()` is the number of nonzeros
@@ -341,6 +342,7 @@ int matrix_market_sort_nonzeros(
     const struct matrix_market * matrix,
     int64_t * row_ptr,
     int32_t * column_indices,
-    void * values);
+    void * values,
+    bool include_symmetric_part);
 
 #endif

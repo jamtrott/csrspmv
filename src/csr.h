@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2020-10-17
+ * Last modified: 2023-02-22
  *
  * Sparse matrices in the compressed sparse row (CSR) format.
  */
@@ -24,6 +24,7 @@
 #ifndef CSR_H
 #define CSR_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -162,7 +163,8 @@ int csr_matrix_int32_print(
 int csr_matrix_int32_from_matrix_market(
     struct csr_matrix_int32 * matrix,
     const struct matrix_market * matrix_market,
-    enum csr_value_format value_format);
+    enum csr_value_format value_format,
+    bool include_symmetric_part);
 
 /**
  * `csr_matrix_int32_spmv()` multiplies a CSR matrix with a vector.

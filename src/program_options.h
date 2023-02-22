@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2020-10-17
+ * Last modified: 2023-02-22
  *
  * Parsing of program options.
  */
@@ -49,6 +49,7 @@ struct program_options
     int destination_vector_precision;
     bool matrix_format_auto;
     enum csr_value_format matrix_format;
+    bool include_symmetric_part;
     bool source_vector_format_auto;
     enum vector_value_format source_vector_format;
     bool destination_vector_format_auto;

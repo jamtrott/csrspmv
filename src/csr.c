@@ -1,6 +1,6 @@
 /*
  * Benchmark program for CSR SpMV
- * Copyright (C) 2020 James D. Trotter
+ * Copyright (C) 2023 James D. Trotter
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * Authors: James D. Trotter <james@simula.no>
- * Last modified: 2020-10-17
+ * Last modified: 2023-02-22
  *
  * Sparse matrices in the compressed sparse row (CSR) format.
  */
@@ -403,7 +403,8 @@ int csr_matrix_int32_print(
 int csr_matrix_int32_from_matrix_market(
     struct csr_matrix_int32 * matrix,
     const struct matrix_market * matrix_market,
-    enum csr_value_format value_format)
+    enum csr_value_format value_format,
+    bool include_symmetric_part)
 {
     int err;
     if (matrix_market->object != matrix_market_matrix)
@@ -414,7 +415,7 @@ int csr_matrix_int32_from_matrix_market(
     /* Determine the number of matrix nonzeros. */
     int64_t num_nonzeros;
     err = matrix_market_num_nonzeros(
-        matrix_market, &num_nonzeros);
+        matrix_market, &num_nonzeros, include_symmetric_part);
     if (err)
         return err;
 
@@ -457,7 +458,7 @@ int csr_matrix_int32_from_matrix_market(
     if (!convert_values) {
         /* 3a. Sort column indices and nonzeros by their rows. */
         err = matrix_market_sort_nonzeros(
-            matrix_market, row_ptr, column_indices, matrix->values);
+            matrix_market, row_ptr, column_indices, matrix->values, include_symmetric_part);
         if (err) {
             csr_matrix_int32_free(matrix);
             return err;
@@ -483,7 +484,7 @@ int csr_matrix_int32_from_matrix_market(
 
         /* 3b.2. Sort column indices and nonzeros by their rows. */
         err = matrix_market_sort_nonzeros(
-            matrix_market, row_ptr, column_indices, values);
+            matrix_market, row_ptr, column_indices, values, include_symmetric_part);
         if (err) {
             free(values);
             csr_matrix_int32_free(matrix);
