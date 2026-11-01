@@ -1,0 +1,3 @@
+/csrspmv
+/src/*.o
+/tests/test_spmv_v2

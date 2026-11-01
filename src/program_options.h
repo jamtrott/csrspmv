@@ -26,6 +26,7 @@
 
 #include "csr.h"
 #include "vector.h"
+#include "spmv_plan.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -56,6 +57,9 @@ struct program_options
     enum vector_value_format destination_vector_format;
     int repeat;
     int64_t min_flops;
+    enum spmv_kernel kernel;
+    struct spmv_v2_options v2;
+    int plan_memory_mib;
     int count_nonzeros;
     int verbose;
     bool help;

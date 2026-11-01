@@ -53,6 +53,9 @@ static int program_options_init(
     args->destination_vector_format = vector_value_f64;
     args->repeat = 1;
     args->min_flops = 0;
+    args->kernel = spmv_original;
+    spmv_v2_defaults(&args->v2);
+    args->plan_memory_mib = 4;
     args->count_nonzeros = 0;
     args->verbose = 0;
     args->help = false;
@@ -97,6 +100,14 @@ void program_options_print_help(
     fprintf(f, "  --destination-vector-prec=N\tprecision for destination vector output\n");
     fprintf(f, "  --destination-vector-format=FORMAT\tchoose one of: int32, f32, f64 or complex32.\n");
     fprintf(f, "  --flops=N\t\t\tminimum number of arithmetic operations to perform\n");
+    fprintf(f, "  --kernel=NAME\t\t\toriginal (default), v2\n");
+    fprintf(f, "  --v2-kernel=NAME\t\tauto (default), csr, short8, merge\n");
+    fprintf(f, "  --partition=NAME\t\t\tauto (default), rows, work; merge requires auto\n");
+    fprintf(f, "  --execution=NAME\t\t\tauto (default), serial, parallel\n");
+    fprintf(f, "  --prefetch=N\t\t\tv2 lookahead: 0 (default), 32, 128 nonzeros\n");
+    fprintf(f, "  --serial-threshold=N\t\tv2 auto serial rows+nnz threshold (default 32768)\n");
+    fprintf(f, "  --strict-order\t\t\tdisable v2 split-row summation\n");
+    fprintf(f, "  --plan-memory-mib=N\t\tv2 scratch budget, default 4 MiB\n");
     fprintf(f, "  -r, --repeat=N\t\trepeat matrix-vector multiplication\n");
     fprintf(f, "  --count-nonzeros\t\tdisplay the number of nonzeros assigned to each thread and exit\n");
     fprintf(f, "  -v, --verbose\t\t\tbe more verbose\n");
@@ -151,6 +162,74 @@ int parse_program_options(
             break;
 
         /* Parse matrix format. */
+        const char *value = NULL;
+        int used = 1;
+        if (strcmp((*argv)[0], "--strict-order") == 0) {
+            args->v2.strict_order = 1; num_arguments_consumed++; continue;
+        }
+        if (strcmp((*argv)[0], "--kernel") == 0 ||
+            strcmp((*argv)[0], "--v2-kernel") == 0 ||
+            strcmp((*argv)[0], "--partition") == 0 ||
+            strcmp((*argv)[0], "--execution") == 0 ||
+            strcmp((*argv)[0], "--prefetch") == 0 ||
+            strcmp((*argv)[0], "--serial-threshold") == 0 ||
+            strcmp((*argv)[0], "--plan-memory-mib") == 0) {
+            if (*argc < 2) { program_options_free(args); return EINVAL; }
+            value = (*argv)[1]; used = 2;
+        } else {
+            const char *eq = strchr((*argv)[0], '=');
+            if (eq) value = eq+1;
+        }
+        if (strcmp((*argv)[0], "--kernel") == 0 ||
+            strncmp((*argv)[0], "--kernel=", 9) == 0) {
+            if (!value) { program_options_free(args); return EINVAL; }
+            if (!strcmp(value,"original")) args->kernel = spmv_original;
+            else if (!strcmp(value,"v2")) args->kernel = spmv_v2;
+            else { program_options_free(args); return EINVAL; }
+            num_arguments_consumed += used; continue;
+        }
+        const char *arg = (*argv)[0];
+        if (!strcmp(arg,"--v2-kernel") || !strncmp(arg,"--v2-kernel=",12) ||
+            !strcmp(arg,"--partition") || !strncmp(arg,"--partition=",12) ||
+            !strcmp(arg,"--execution") || !strncmp(arg,"--execution=",12)) {
+            int n=-1;
+            if (value && !strcmp(value,"auto")) n=0;
+            if (!strncmp(arg,"--v2-kernel",11)) {
+                if(value && !strcmp(value,"csr")) n=1;
+                if(value && !strcmp(value,"short8")) n=2;
+                if(value && !strcmp(value,"merge")) n=3;
+                args->v2.kernel=n;
+            } else if (!strncmp(arg,"--partition",11)) {
+                if(value && !strcmp(value,"rows")) n=1;
+                if(value && !strcmp(value,"work")) n=2;
+                args->v2.partition=n;
+            } else {
+                if(value && !strcmp(value,"serial")) n=1;
+                if(value && !strcmp(value,"parallel")) n=2;
+                args->v2.execution=n;
+            }
+            if(n<0) { program_options_free(args); return EINVAL; }
+            num_arguments_consumed+=used; continue;
+        }
+        if (!strcmp(arg,"--prefetch") || !strncmp(arg,"--prefetch=",11) ||
+            !strcmp(arg,"--serial-threshold") || !strncmp(arg,"--serial-threshold=",19)) {
+            int64_t n; const char *end=NULL;
+            err=value ? parse_int64(value,NULL,&n,&end):EINVAL;
+            int pref=!strncmp(arg,"--prefetch",10);
+            if(err || !end || *end || n<0 || (pref && n!=0 && n!=32 && n!=128)) {
+                program_options_free(args); return EINVAL;
+            }
+            if(pref) args->v2.prefetch=(int)n;
+            else args->v2.serial_threshold=n;
+            num_arguments_consumed+=used; continue;
+        }
+        if (!strcmp(arg,"--plan-memory-mib") || !strncmp(arg,"--plan-memory-mib=",18)) {
+            int32_t n; const char *end=NULL;
+            err=value ? parse_int32(value,NULL,&n,&end):EINVAL;
+            if(err || !end || *end || n<0) { program_options_free(args); return EINVAL; }
+            args->plan_memory_mib=n; num_arguments_consumed+=used; continue;
+        }
+
         if (strcmp((*argv)[0], "--matrix-format") == 0) {
             if (*argc < 2) {
                 program_options_free(args);
@@ -436,5 +515,9 @@ int parse_program_options(
         return EINVAL;
     }
 
+    if (args->repeat < 0 || args->min_flops < 0 ||
+        (uint64_t)args->plan_memory_mib > SIZE_MAX / 1048576) {
+        program_options_free(args); return EINVAL;
+    }
     return 0;
 }
